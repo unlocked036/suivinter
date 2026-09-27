@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Feuille de route — Intermittent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --bg: #1B1A17; --surface: #242220; --surface-2: #2C2A26; --line: #3A372F;
+    --text: #F2EDE4; --muted: #A79E8E; --amber: #783f49; --amber-text: #F2EDE4; --teal: #6FA88C; --rose: #C97064; --blue: #7FA8C9;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+  :root[data-theme="light"] {
+    --bg: #F6F3EC; --surface: #FFFFFF; --surface-2: #FBF9F4;
+    --line: #E3DCCB; --text: #2A2723; --muted: #7D7566;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-height: 100%; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+  .marquee { font-family: 'Fraunces', Georgia, serif; font-size: clamp(28px, 5vw, 40px);
+    font-weight: 600; letter-spacing: -0.01em; margin: 0 0 4px; }
+  .marquee em { font-style: italic; color: var(--amber); font-weight: 400; }
+  .subhead { color: var(--muted); margin: 0 0 28px; font-size: 15px; }
+  .grid { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
+  @media (max-width: 780px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+  .stat-block + .stat-block { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .stat-label { font-size: 13px; color: var(--muted); margin: 0 0 6px; display:flex; justify-content:space-between; gap:8px; align-items:center; }
+  .stat-value { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 600; margin: 0; line-height: 1; }
+  .stat-value small { font-family: Inter, sans-serif; font-size: 14px; font-weight: 500; color: var(--muted); }
+  .ring-track { width: 100%; height: 8px; border-radius: 5px; background: var(--surface-2); overflow: hidden; margin-top: 12px; position: relative; }
+  .ring-fill { height: 100%; background: var(--amber); border-radius: 5px; transition: width .4s ease; position: absolute; left: 0; top: 0; }
+  .ring-fill.done { background: var(--teal); }
+  .ring-fill-planned { height: 100%; background: rgba(120,63,73,0.4); border-radius: 5px; position: absolute; top: 0; transition: left .4s ease, width .4s ease; }
+  .hint { font-size: 12.5px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+  .mini-row { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; }
+  .mini-row strong { font-variant-numeric: tabular-nums; }
+  .mini-row.total { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 9px; font-weight: 600; }
+  .anchor-edit { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+  .anchor-edit select { flex: 1; }
+  .link-btn { background: none; border: none; color: var(--amber); font-size: 12px; cursor: pointer; padding: 0; }
+  form.add { display: flex; flex-wrap: wrap; gap: 12px; align-items: end;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 18px; }
+  .field { flex: 1 1 150px; min-width: 120px; }
+  .field.wide { flex: 2 1 220px; }
+  .field.narrow { flex: 0 0 140px; min-width: 110px; }
+  .filter-bar { display:flex; gap:10px; align-items:end; margin-bottom:16px; flex-wrap:wrap; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+  input, select {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--line); color: var(--text);
+    border-radius: 8px; padding: 9px 10px; font-size: 14px; font-family: inherit;
+  }
+  input:focus, select:focus, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+  button.primary { background: var(--amber); color: var(--amber-text); border: none; border-radius: 8px;
+    padding: 10px 18px; font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap; flex: 0 0 auto; }
+  button.primary:hover { filter: brightness(1.06); }
+  .list-title { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+  .row { padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: none; }
+  .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .row .name { font-weight: 500; }
+  .row .tag { font-size: 11px; color: var(--blue); border: 1px solid var(--line); border-radius: 10px; padding: 1px 8px; margin-left: 8px; }
+  .row .date { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; }
+  .chip { font-size: 13px; font-variant-numeric: tabular-nums; }
+  .chip small { display: block; color: var(--muted); font-size: 11px; }
+  .icon-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 4px 6px; }
+  .icon-btn.del:hover { color: var(--rose); }
+  .icon-btn.edit:hover { color: var(--amber); }
+  .empty { text-align: center; color: var(--muted); padding: 40px 10px; font-size: 14px; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+  .tab-btn { background:none; border:1px solid var(--line); color:var(--muted); border-radius:20px; padding:6px 14px; font-size:13px; cursor:pointer; }
+  .tab-btn.active { background:var(--amber); color:var(--amber-text); border-color:var(--amber); font-weight:600; }
+  .cal-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .cal-label { font-family:'Fraunces',serif; font-size:16px; font-weight:600; text-transform:capitalize; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .cal-day-name { font-size:11px; color:var(--muted); text-align:center; padding-bottom:4px; }
+  .cal-cell { aspect-ratio:1; border:1px solid var(--line); border-radius:8px; padding:4px; font-size:12px; cursor:pointer; position:relative; background:var(--surface-2); }
+  .cal-cell.empty { border:none; background:none; cursor:default; }
+  .cal-cell.today { border-color:var(--amber); }
+  .cal-cell.warn { border-color:var(--rose); box-shadow:0 0 0 1px var(--rose) inset; }
+  .cal-cell .dots { position:absolute; bottom:4px; left:4px; display:flex; gap:2px; flex-wrap:wrap; }
+  .cal-dot { width:9px; height:9px; border-radius:50%; }
+  .reminder-banner { background: rgba(201,112,100,0.14); border: 1px solid var(--rose); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; }
+  .reminder-banner .r-item { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:4px 0; }
+  .reminder-banner .r-item button { background:none; border:none; color:var(--amber); cursor:pointer; font-size:12px; white-space:nowrap; }
+  .cal-dot.engagement { background:var(--amber); }
+  .cal-dot.indemnisation { background:var(--teal); }
+  .cal-dot.conges { background:var(--blue); }
+  .cal-details { margin-top:14px; font-size:13px; }
+  .cal-details .entry { padding:6px 0; border-bottom:1px solid var(--line); }
+  .bar-chart { display:flex; align-items:flex-end; gap:6px; height:120px; margin-bottom:16px; }
+  .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; height:100%; }
+  .bar-track { flex:1 1 auto; min-height:0; width:100%; position:relative; display:flex; align-items:flex-end; justify-content:center; }
+  .bar-value { position:absolute; bottom:100%; left:0; right:0; text-align:center; font-size:9px; color:var(--muted); margin-bottom:2px; white-space:nowrap; }
+  .bar { width:100%; background:var(--amber); border-radius:4px 4px 0 0; min-height:2px; }
+  .bar-label { flex:0 0 auto; font-size:10px; color:var(--muted); margin-top:4px; }
+  .emp-table { margin-top:6px; }
+  .emp-row { display:grid; grid-template-columns:1fr repeat(5, auto); gap:14px; align-items:center; font-size:13px; padding:8px 0; border-bottom:1px solid var(--line); }
+  .emp-row:last-child { border-bottom:none; }
+  .emp-name { display:flex; align-items:center; gap:8px; font-weight:500; }
+  .emp-row .num { text-align:right; font-variant-numeric:tabular-nums; }
+  .emp-row .num small { display:block; color:var(--muted); font-size:10px; }
+  @media (max-width: 560px) { .emp-row { grid-template-columns: 1fr; text-align:left; gap:2px; } .emp-row .num { text-align:left; } }
+  .top-actions { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .toggle-theme { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 20px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top-actions">
+    <span id="connBadge" class="toggle-theme" style="cursor:default"></span>
+    <button class="toggle-theme" id="exportBtn" type="button">Exporter</button>
+    <button class="toggle-theme" id="importBtn" type="button">Importer</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+    <button class="toggle-theme" id="themeToggle" type="button">Mode clair</button>
+  </div>
+  <h1 class="marquee">Feuille de <em>route</em></h1>
+  <p class="subhead">Vos engagements, vos indemnisations, votre seuil des 507&nbsp;h — au même endroit.</p>
+
+  <div class="grid">
+    <aside class="panel" aria-label="Statistiques">
+      <div class="stat-block">
+        <p class="stat-label"><span>Heures — période de référence</span>
+          <button class="link-btn" id="editAnchorBtn" type="button">changer</button></p>
+        <p class="stat-value" id="hoursValue">0 <small>/ 507 h</small></p>
+        <div class="ring-track"><div class="ring-fill" id="hoursBar" style="width:0%"></div><div class="ring-fill-planned" id="hoursBarPlanned" style="width:0%"></div></div>
+        <p class="hint" id="hoursHint"></p>
+        <div class="anchor-edit" id="anchorEdit" style="display:none">
+          <select id="anchorDay"></select>
+          <select id="anchorMonth"></select>
+          <button class="link-btn" id="anchorSave" type="button">valider</button>
+        </div>
+      </div>
+      <div class="stat-block">
+        <p class="stat-label">Montants — même période</p>
+        <div class="mini-row"><span>Brut (travail)</span><strong id="sumBrut">0 €</strong></div>
+        <div class="mini-row"><span>Net social</span><strong id="sumSocial">0 €</strong></div>
+        <div class="mini-row"><span>Net imposable</span><strong id="sumImposable">—</strong></div>
+        <div class="mini-row"><span>Avant impôt</span><strong id="sumAvant">—</strong></div>
+        <div class="mini-row"><span>Impôt prélevé</span><strong id="sumTax">—</strong></div>
+        <div class="mini-row"><span>Net payé (travail)</span><strong id="sumNet">0 €</strong></div>
+        <div class="mini-row"><span>Indemnisations</span><strong id="sumIndem">0 €</strong></div>
+        <div class="mini-row"><span>Congés spectacle</span><strong id="sumConges">0 €</strong></div>
+        <div class="mini-row total"><span>Total perçu</span><strong id="sumTotal">0 €</strong></div>
+      </div>
+      <div class="stat-block">
+        <p class="stat-label">Cumul par année</p>
+        <div id="yearlyCumul"></div>
+        <p class="hint" id="countHint">0 entrée enregistrée</p>
+      </div>
+    </aside>
+
+    <main>
+      <form class="add" id="addForm">
+        <div class="field">
+          <label for="f-type">Type</label>
+          <select id="f-type">
+            <option value="engagement">Engagement (cachet)</option>
+            <option value="indemnisation">Indemnisation chômage</option>
+            <option value="conges">Congés spectacle</option>
+          </select>
+        </div>
+        <div class="field wide eng-group">
+          <label for="f-name">Employeur / production</label>
+          <input id="f-name" list="employerList" type="text" placeholder="Ex. Cie du Marronnier">
+          <datalist id="employerList"></datalist>
+        </div>
+        <div class="field wide indem-group" style="display:none">
+          <label for="f-organisme">Organisme</label>
+          <input id="f-organisme" type="text" placeholder="France Travail" value="France Travail">
+        </div>
+        <div class="field">
+          <label for="f-date">Date de début</label>
+          <input id="f-date" type="date" required>
+        </div>
+        <div class="field">
+          <label for="f-date-end">Date de fin</label>
+          <input id="f-date-end" type="date" placeholder="si période">
+        </div>
+        <div class="field eng-group">
+          <label for="f-status">Statut</label>
+          <select id="f-status">
+            <option value="prevu">Prévu</option>
+            <option value="effectue">Effectué</option>
+          </select>
+        </div>
+        <div class="field wide eng-group">
+          <label for="f-show">Spectacle</label>
+          <input id="f-show" list="showList" type="text" placeholder="facultatif">
+          <datalist id="showList"></datalist>
+        </div>
+        <div class="field eng-group">
+          <label for="f-venue">Lieu</label>
+          <input id="f-venue" list="venueList" type="text" placeholder="facultatif">
+          <datalist id="venueList"></datalist>
+        </div>
+        <div class="field eng-group">
+          <label for="f-hours">Heures</label>
+          <input id="f-hours" type="number" min="0" step="0.5" placeholder="8">
+        </div>
+        <div class="field eng-group">
+          <label for="f-brut">Brut (€)</label>
+          <input id="f-brut" type="number" min="0" step="0.01" placeholder="220">
+        </div>
+        <div class="field eng-group">
+          <label for="f-social">Net social (€)</label>
+          <input id="f-social" type="number" min="0" step="0.01" placeholder="facultatif">
+        </div>
+        <div class="field eng-group">
+          <label for="f-imposable">Net imposable (€)</label>
+          <input id="f-imposable" type="number" min="0" step="0.01" placeholder="facultatif">
+        </div>
+        <div class="field eng-group">
+          <label for="f-avant">Net à payer avant impôt (€)</label>
+          <input id="f-avant" type="number" min="0" step="0.01" placeholder="facultatif">
+        </div>
+        <div class="field eng-group">
+          <label for="f-paye">Net payé (€)</label>
+          <input id="f-paye" type="number" min="0" step="0.01" placeholder="facultatif">
+        </div>
+        <div class="field indem-group" style="display:none">
+          <label for="f-amount">Montant (€)</label>
+          <input id="f-amount" type="number" min="0" step="0.01" placeholder="900">
+        </div>
+        <button class="primary" type="submit" id="submitBtn">Ajouter</button>
+        <button class="link-btn" type="button" id="cancelEditBtn" style="display:none">annuler la modification</button>
+      </form>
+
+      <div class="panel">
+        <div id="reminderBanner" class="reminder-banner" style="display:none"></div>
+        <div class="filter-bar">
+          <div class="field narrow">
+            <label for="filterFrom">Filtrer du</label>
+            <input type="date" id="filterFrom">
+          </div>
+          <div class="field narrow">
+            <label for="filterTo">au</label>
+            <input type="date" id="filterTo">
+          </div>
+          <button class="link-btn" id="filterApply" type="button">Appliquer</button>
+          <button class="link-btn" id="filterReset" type="button" style="display:none">Réinitialiser</button>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active" data-view="list" type="button">Historique</button>
+          <button class="tab-btn" data-view="calendar" type="button">Calendrier</button>
+          <button class="tab-btn" data-view="stats" type="button">Statistiques</button>
+        </div>
+        <div id="listView"><div id="list"></div></div>
+        <div id="calendarView" style="display:none">
+          <div class="cal-nav">
+            <button class="link-btn" id="calPrev" type="button">‹ précédent</button>
+            <span id="calLabel" class="cal-label"></span>
+            <button class="link-btn" id="calNext" type="button">suivant ›</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div id="calDetails" class="cal-details"></div>
+        </div>
+        <div id="statsView" style="display:none"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+(function () {
+  var KEY = 'intermittent-engagements-v3';
+  var LEGACY_KEY = 'intermittent-engagements-v2';
+  var ANCHOR_KEY = 'intermittent-anchor-v1';
+  var THRESHOLD = 507;
+  var data = [];
+  var anchorStr = null;
+  var customRange = null;
+  var isRemote = false;
+
+  function loadLocalFallback() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) return { entries: JSON.parse(raw), anchor: localStorage.getItem(ANCHOR_KEY) };
+      var legacy = localStorage.getItem(LEGACY_KEY);
+      if (legacy) {
+        var old = JSON.parse(legacy);
+        if (Array.isArray(old)) return { entries: old.map(function (e) { e.type = 'engagement'; return e; }), anchor: localStorage.getItem(ANCHOR_KEY) };
+      }
+    } catch (e) {}
+    return { entries: [], anchor: null };
+  }
+
+  async function loadInitial() {
+    try {
+      var res = await fetch('/api/data', { cache: 'no-store' });
+      if (res.ok) {
+        var json = await res.json();
+        isRemote = true;
+        return { entries: Array.isArray(json.entries) ? json.entries : [], anchor: json.anchor || null };
+      }
+    } catch (e) {}
+    isRemote = false;
+    return loadLocalFallback();
+  }
+
+  async function persist() {
+    if (isRemote) {
+      try {
+        var res = await fetch('/api/data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entries: data, anchor: anchorStr })
+        });
+        if (res.ok) return;
+      } catch (e) {}
+      isRemote = false;
+      setConnBadge();
+    }
+    try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+    try { if (anchorStr) localStorage.setItem(ANCHOR_KEY, anchorStr); } catch (e) {}
+  }
+
+  function setConnBadge() {
+    var el = document.getElementById('connBadge');
+    if (!el) return;
+    el.textContent = isRemote ? 'Partagé (Mac mini)' : 'Local uniquement';
+    el.style.color = isRemote ? 'var(--teal)' : 'var(--muted)';
+  }
+
+  function fmtEUR(n) { return Math.round(n).toLocaleString('fr-FR') + ' €'; }
+  function fmtDate(d) { return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }); }
+  function parseISO(iso) { return new Date(iso + 'T00:00:00'); }
+  function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+  var EMPLOYER_PALETTE = ['#E3A548', '#C97064', '#8E7CC3', '#5FA8D3', '#9BBF65', '#D98CB3', '#DDBB55', '#8FA6A0', '#E08E45', '#A98CD9'];
+  function employerColor(name) {
+    var hash = 0;
+    for (var i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+    return EMPLOYER_PALETTE[hash % EMPLOYER_PALETTE.length];
+  }
+  function daysSpan(e) {
+    if (!e.endDate) return 1;
+    var ms = parseISO(e.endDate) - parseISO(e.date);
+    return Math.round(ms / 86400000) + 1;
+  }
+
+  function getAnchorPeriod() {
+    var now = new Date(); now.setHours(0,0,0,0);
+    if (anchorStr) {
+      var a = parseISO(anchorStr);
+      var candidate = new Date(now.getFullYear(), a.getMonth(), a.getDate());
+      if (candidate < now) candidate.setFullYear(candidate.getFullYear() + 1);
+      var end = candidate;
+      var start = new Date(end); start.setFullYear(start.getFullYear() - 1);
+      return { start: start, end: end, anchored: true };
+    }
+    var end2 = now;
+    var start2 = new Date(end2); start2.setFullYear(start2.getFullYear() - 1);
+    return { start: start2, end: end2, anchored: false };
+  }
+
+  function getPeriod() {
+    var now = new Date(); now.setHours(0,0,0,0);
+    if (customRange) {
+      return { start: customRange.start || new Date(0), end: customRange.end || now, anchored: false, custom: true };
+    }
+    return getAnchorPeriod();
+  }
+
+  function render() {
+    var period = getPeriod();
+    var now = new Date(); now.setHours(0,0,0,0);
+    var upper = period.end < now ? period.end : now;
+    var sorted = data.slice().filter(function (e) {
+      if (!customRange) return true;
+      var d = parseISO(e.date);
+      if (customRange.start && d < customRange.start) return false;
+      if (customRange.end && d > customRange.end) return false;
+      return true;
+    }).sort(function (a, b) { return b.date.localeCompare(a.date); });
+
+    var hours = 0, brut = 0, social = 0, netPaye = 0, hasSocial = 0, hasNet = 0, indem = 0, conges = 0;
+    var imposable = 0, hasImposable = 0, avant = 0, hasAvant = 0;
+    var totalBrutAll = 0, totalIndemAll = 0, totalCongesAll = 0;
+    data.forEach(function (e) {
+      var d = parseISO(e.date);
+      if (e.type === 'indemnisation' || e.type === 'conges') {
+        if (e.type === 'indemnisation') { totalIndemAll += e.amount; if (d >= period.start && d <= upper) indem += e.amount; }
+        else { totalCongesAll += e.amount; if (d >= period.start && d <= upper) conges += e.amount; }
+        return;
+      }
+      totalBrutAll += e.brut;
+      if (d >= period.start && d <= upper) {
+        hours += e.hours;
+        brut += e.brut;
+        if (typeof e.social === 'number') { social += e.social; hasSocial++; }
+        if (typeof e.imposable === 'number') { imposable += e.imposable; hasImposable++; }
+        if (typeof e.avant === 'number') { avant += e.avant; hasAvant++; }
+        if (typeof e.paye === 'number') { netPaye += e.paye; hasNet++; }
+      }
+    });
+
+    document.getElementById('hoursValue').innerHTML = Math.round(hours * 10) / 10 + ' <small>/ 507 h</small>';
+    var pct = Math.min(100, (hours / THRESHOLD) * 100);
+    var bar = document.getElementById('hoursBar');
+    bar.style.width = pct + '%';
+    bar.className = 'ring-fill' + (hours >= THRESHOLD ? ' done' : '');
+
+    var anchorPeriod = getAnchorPeriod();
+    var hoursPlanned = 0;
+    data.forEach(function (e) {
+      if (e.type !== 'engagement') return;
+      var d = parseISO(e.date);
+      if (d > now && d <= anchorPeriod.end) hoursPlanned += e.hours;
+    });
+    var pctPlanned = Math.max(0, Math.min(100 - pct, (hoursPlanned / THRESHOLD) * 100));
+    var barPlanned = document.getElementById('hoursBarPlanned');
+    barPlanned.style.left = pct + '%';
+    barPlanned.style.width = pctPlanned + '%';
+
+    var periodTxt = customRange
+      ? 'Filtre : ' + (customRange.start ? fmtDate(customRange.start) : '…') + ' → ' + (customRange.end ? fmtDate(customRange.end) : "aujourd'hui")
+      : 'Période : ' + fmtDate(period.start) + ' → ' + fmtDate(period.end) + (period.anchored ? '' : ' (par défaut, sans date anniversaire)');
+    var plannedTxt = (anchorPeriod.anchored && hoursPlanned > 0)
+      ? (' + ' + (Math.round(hoursPlanned * 10) / 10) + ' h prévues d’ici le ' + fmtDate(anchorPeriod.end) + '.')
+      : '';
+    document.getElementById('hoursHint').textContent = periodTxt + ' — ' + (hours >= THRESHOLD ? 'seuil atteint.' : ('encore ' + (Math.round((THRESHOLD - hours) * 10) / 10) + ' h à faire.')) + plannedTxt;
+
+    document.getElementById('sumBrut').textContent = fmtEUR(brut);
+    document.getElementById('sumSocial').textContent = hasSocial ? fmtEUR(social) : '—';
+    document.getElementById('sumImposable').textContent = hasImposable ? fmtEUR(imposable) : '—';
+    document.getElementById('sumAvant').textContent = hasAvant ? fmtEUR(avant) : '—';
+    document.getElementById('sumTax').textContent = (hasAvant && hasNet) ? fmtEUR(avant - netPaye) : ((hasSocial && hasNet) ? fmtEUR(social - netPaye) : '—');
+    document.getElementById('sumNet').textContent = hasNet ? fmtEUR(netPaye) : '—';
+    document.getElementById('sumIndem').textContent = fmtEUR(indem);
+    document.getElementById('sumConges').textContent = fmtEUR(conges);
+    document.getElementById('sumTotal').textContent = fmtEUR((hasNet ? netPaye : brut) + indem + conges);
+
+    var perYear = {};
+    data.forEach(function (e) {
+      var y = parseISO(e.date).getFullYear();
+      if (!perYear[y]) perYear[y] = { hours: 0, brut: 0, indem: 0, conges: 0 };
+      if (e.type === 'engagement') { perYear[y].hours += e.hours; perYear[y].brut += e.brut; }
+      else if (e.type === 'indemnisation') perYear[y].indem += e.amount;
+      else if (e.type === 'conges') perYear[y].conges += e.amount;
+    });
+    var years = Object.keys(perYear).sort(function (a, b) { return b - a; });
+    document.getElementById('yearlyCumul').innerHTML = years.map(function (y) {
+      var s = perYear[y];
+      var tot = s.brut + s.indem + s.conges;
+      return '<div class="mini-row"><span>' + y + '</span><strong>' + fmtEUR(tot) + '</strong></div>';
+    }).join('') || '<p class="hint">Aucune donnée.</p>';
+
+    document.getElementById('countHint').textContent = data.length + (data.length > 1 ? ' entrées enregistrées' : ' entrée enregistrée');
+    if (activeView === 'calendar') renderCalendar();
+    if (activeView === 'stats') renderStats();
+
+    var overdue = data.filter(function (e) {
+      if (e.type !== 'engagement' || (e.status || 'effectue') !== 'prevu') return false;
+      var end = e.endDate ? parseISO(e.endDate) : parseISO(e.date);
+      return end < now;
+    });
+    var banner = document.getElementById('reminderBanner');
+    if (overdue.length) {
+      banner.style.display = '';
+      banner.innerHTML = '<strong>⚠ ' + overdue.length + ' engagement(s) passé(s) toujours marqué(s) « prévu »</strong> — vérifiez et mettez à jour le brut réel.' +
+        overdue.map(function (e) {
+          return '<div class="r-item"><span>' + escapeHtml(e.name) + ' · ' + fmtDate(parseISO(e.date)) + '</span><button data-id="' + e.id + '" type="button">modifier</button></div>';
+        }).join('');
+      banner.querySelectorAll('button[data-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var found = data.find(function (x) { return x.id === btn.getAttribute('data-id'); });
+          if (found) startEdit(found);
+        });
+      });
+    } else {
+      banner.style.display = 'none';
+    }
+
+    var employers = Array.from(new Set(data.filter(function (e) { return e.type === 'engagement'; }).map(function (e) { return e.name; }))).sort();
+    document.getElementById('employerList').innerHTML = employers.map(function (n) { return '<option value="' + n.replace(/"/g, '&quot;') + '">'; }).join('');
+    var shows = Array.from(new Set(data.filter(function (e) { return e.type === 'engagement' && e.show; }).map(function (e) { return e.show; }))).sort();
+    document.getElementById('showList').innerHTML = shows.map(function (n) { return '<option value="' + n.replace(/"/g, '&quot;') + '">'; }).join('');
+    var venues = Array.from(new Set(data.filter(function (e) { return e.type === 'engagement' && e.venue; }).map(function (e) { return e.venue; }))).sort();
+    document.getElementById('venueList').innerHTML = venues.map(function (n) { return '<option value="' + n.replace(/"/g, '&quot;') + '">'; }).join('');
+
+    var list = document.getElementById('list');
+    if (sorted.length === 0) {
+      list.innerHTML = '<div class="empty">Aucune entrée pour l’instant — ajoutez la première ci-dessus.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    sorted.forEach(function (e) {
+      var row = document.createElement('div');
+      row.className = 'row';
+      if (e.type === 'indemnisation' || e.type === 'conges') {
+        var tagLabel = e.type === 'conges' ? 'congés spectacle' : 'indemnisation';
+        row.innerHTML =
+          '<div class="row-top"><span><span class="name"></span><span class="tag">' + tagLabel + '</span></span><span class="date"></span><span><button class="icon-btn edit" aria-label="Modifier" type="button">✎</button><button class="icon-btn del" aria-label="Supprimer" type="button">✕</button></span></div>' +
+          '<div class="chips"><div class="chip"><span></span><small>montant</small></div></div>';
+        row.querySelector('.name').textContent = e.name;
+        row.querySelector('.date').textContent = fmtDate(parseISO(e.date));
+        row.querySelector('.chip span').textContent = fmtEUR(e.amount);
+      } else {
+        var imp = (typeof e.avant === 'number' && typeof e.paye === 'number') ? fmtEUR(e.avant - e.paye)
+          : ((typeof e.social === 'number' && typeof e.paye === 'number') ? fmtEUR(e.social - e.paye) : '—');
+        var tagHtml = (e.status || 'effectue') === 'prevu' ? '<span class="tag" style="color:var(--rose);border-color:var(--rose)">prévu</span>' : '';
+        var subInfo = [e.show, e.venue].filter(Boolean).map(escapeHtml).join(' · ');
+        var subHtml = subInfo ? '<div class="hint" style="margin:2px 0 0">' + subInfo + '</div>' : '';
+        row.innerHTML =
+          '<div class="row-top"><span class="name"><span class="cal-dot" style="display:inline-block;margin-right:6px"></span><span class="ename"></span>' + tagHtml + '</span><span class="date"></span><span><button class="icon-btn edit" aria-label="Modifier" type="button">✎</button><button class="icon-btn del" aria-label="Supprimer" type="button">✕</button></span></div>' +
+          subHtml +
+          '<div class="chips">' +
+          '<div class="chip"><span></span><small>heures</small></div>' +
+          '<div class="chip"><span></span><small>brut</small></div>' +
+          '<div class="chip"><span>' + (typeof e.social === 'number' ? fmtEUR(e.social) : '—') + '</span><small>net social</small></div>' +
+          '<div class="chip"><span>' + (typeof e.imposable === 'number' ? fmtEUR(e.imposable) : '—') + '</span><small>net imposable</small></div>' +
+          '<div class="chip"><span>' + (typeof e.avant === 'number' ? fmtEUR(e.avant) : '—') + '</span><small>avant impôt</small></div>' +
+          '<div class="chip"><span>' + imp + '</span><small>impôt</small></div>' +
+          '<div class="chip"><span>' + (typeof e.paye === 'number' ? fmtEUR(e.paye) : '—') + '</span><small>net payé</small></div>' +
+          '</div>';
+        row.querySelector('.ename').textContent = e.name;
+        row.querySelector('.name .cal-dot').style.background = employerColor(e.name);
+        row.querySelector('.date').textContent = e.endDate
+          ? (fmtDate(parseISO(e.date)) + ' → ' + fmtDate(parseISO(e.endDate)))
+          : fmtDate(parseISO(e.date));
+        var chipSpans = row.querySelectorAll('.chip span');
+        chipSpans[0].textContent = e.hours + ' h';
+        chipSpans[1].textContent = fmtEUR(e.brut);
+      }
+      row.querySelector('.del').addEventListener('click', function () {
+        if (!confirm('Supprimer « ' + e.name + ' » du ' + fmtDate(parseISO(e.date)) + ' ? Cette action est définitive.')) return;
+        data = data.filter(function (x) { return x.id !== e.id; });
+        if (editingId === e.id) cancelEdit();
+        persist(); render();
+      });
+      row.querySelector('.edit').addEventListener('click', function () { startEdit(e); });
+      list.appendChild(row);
+    });
+  }
+
+  var editingId = null;
+  function setTypeUI(type) {
+    var isIndemLike = type === 'indemnisation' || type === 'conges';
+    document.querySelectorAll('.eng-group').forEach(function (g) { g.style.display = isIndemLike ? 'none' : ''; });
+    document.querySelectorAll('.indem-group').forEach(function (g) { g.style.display = isIndemLike ? '' : 'none'; });
+  }
+  function startEdit(e) {
+    editingId = e.id;
+    document.getElementById('f-type').value = e.type;
+    setTypeUI(e.type);
+    document.getElementById('f-date').value = e.date;
+    document.getElementById('f-date-end').value = e.endDate || '';
+    if (e.type === 'indemnisation' || e.type === 'conges') {
+      document.getElementById('f-organisme').value = e.name;
+      document.getElementById('f-amount').value = e.amount;
+    } else {
+      document.getElementById('f-name').value = e.name;
+      document.getElementById('f-status').value = e.status || 'effectue';
+      document.getElementById('f-show').value = e.show || '';
+      document.getElementById('f-venue').value = e.venue || '';
+      document.getElementById('f-hours').value = e.hours;
+      document.getElementById('f-brut').value = e.brut;
+      document.getElementById('f-social').value = typeof e.social === 'number' ? e.social : '';
+      document.getElementById('f-imposable').value = typeof e.imposable === 'number' ? e.imposable : '';
+      document.getElementById('f-avant').value = typeof e.avant === 'number' ? e.avant : '';
+      document.getElementById('f-paye').value = typeof e.paye === 'number' ? e.paye : '';
+    }
+    document.getElementById('submitBtn').textContent = 'Enregistrer les modifications';
+    document.getElementById('cancelEditBtn').style.display = '';
+    document.getElementById('addForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  function cancelEdit() {
+    editingId = null;
+    document.getElementById('addForm').reset();
+    setTypeUI('engagement');
+    document.getElementById('submitBtn').textContent = 'Ajouter';
+    document.getElementById('cancelEditBtn').style.display = 'none';
+  }
+  document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
+
+  var engGroups = document.querySelectorAll('.eng-group');
+  var indemGroups = document.querySelectorAll('.indem-group');
+  var defaultOrganisme = { indemnisation: 'France Travail', conges: 'Congés Spectacles' };
+  document.getElementById('f-type').addEventListener('change', function (ev) {
+    setTypeUI(ev.target.value);
+    var d = defaultOrganisme[ev.target.value];
+    if (d) {
+      var orgField = document.getElementById('f-organisme');
+      var currentIsDefault = orgField.value === '' || orgField.value === 'France Travail' || orgField.value === 'Congés Spectacles';
+      if (currentIsDefault) orgField.value = d;
+    }
+  });
+
+  document.getElementById('addForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var type = document.getElementById('f-type').value;
+    var date = document.getElementById('f-date').value;
+    if (!date) return;
+    var id = editingId || (Date.now() + '-' + Math.random().toString(36).slice(2));
+    var endRaw = document.getElementById('f-date-end').value;
+    if (type === 'indemnisation' || type === 'conges') {
+      var organisme = document.getElementById('f-organisme').value.trim() || defaultOrganisme[type];
+      var amount = parseFloat(document.getElementById('f-amount').value);
+      if (isNaN(amount)) return;
+      var indemEntry = { id: id, type: type, name: organisme, date: date, amount: amount };
+      if (endRaw && endRaw > date) indemEntry.endDate = endRaw;
+      if (editingId) { data = data.map(function (x) { return x.id === editingId ? indemEntry : x; }); }
+      else { data.push(indemEntry); }
+    } else {
+      var name = document.getElementById('f-name').value.trim();
+      var hours = parseFloat(document.getElementById('f-hours').value);
+      var brut = parseFloat(document.getElementById('f-brut').value);
+      var socialRaw = document.getElementById('f-social').value;
+      var imposableRaw = document.getElementById('f-imposable').value;
+      var avantRaw = document.getElementById('f-avant').value;
+      var payeRaw = document.getElementById('f-paye').value;
+      if (!name || isNaN(hours) || isNaN(brut)) return;
+      var entry = { id: id, type: 'engagement', name: name, date: date, hours: hours, brut: brut, status: document.getElementById('f-status').value };
+      var showVal = document.getElementById('f-show').value.trim();
+      var venueVal = document.getElementById('f-venue').value.trim();
+      if (showVal) entry.show = showVal;
+      if (venueVal) entry.venue = venueVal;
+      if (socialRaw !== '') entry.social = parseFloat(socialRaw);
+      if (imposableRaw !== '') entry.imposable = parseFloat(imposableRaw);
+      if (avantRaw !== '') entry.avant = parseFloat(avantRaw);
+      if (payeRaw !== '') entry.paye = parseFloat(payeRaw);
+      if (endRaw && endRaw > date) entry.endDate = endRaw;
+      if (editingId) { data = data.map(function (x) { return x.id === editingId ? entry : x; }); }
+      else { data.push(entry); }
+    }
+    cancelEdit();
+    persist(); render();
+  });
+
+  var MONTH_NAMES = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  var anchorDaySel = document.getElementById('anchorDay');
+  var anchorMonthSel = document.getElementById('anchorMonth');
+  MONTH_NAMES.forEach(function (name, idx) {
+    var opt = document.createElement('option');
+    opt.value = idx; opt.textContent = name;
+    anchorMonthSel.appendChild(opt);
+  });
+  function fillDayOptions(monthIdx, selectedDay) {
+    var daysInMonth = new Date(2000, monthIdx + 1, 0).getDate();
+    anchorDaySel.innerHTML = '';
+    for (var d = 1; d <= daysInMonth; d++) {
+      var opt = document.createElement('option');
+      opt.value = d; opt.textContent = d;
+      anchorDaySel.appendChild(opt);
+    }
+    anchorDaySel.value = Math.min(selectedDay || 1, daysInMonth);
+  }
+  anchorMonthSel.addEventListener('change', function () { fillDayOptions(parseInt(anchorMonthSel.value, 10), parseInt(anchorDaySel.value, 10)); });
+
+  var anchorEditBox = document.getElementById('anchorEdit');
+  document.getElementById('editAnchorBtn').addEventListener('click', function () {
+    var visible = anchorEditBox.style.display !== 'none';
+    anchorEditBox.style.display = visible ? 'none' : 'flex';
+    if (!visible) {
+      var ref = anchorStr ? parseISO(anchorStr) : new Date();
+      anchorMonthSel.value = ref.getMonth();
+      fillDayOptions(ref.getMonth(), ref.getDate());
+    }
+  });
+  document.getElementById('anchorSave').addEventListener('click', function () {
+    var mm = String(parseInt(anchorMonthSel.value, 10) + 1).padStart(2, '0');
+    var dd = String(parseInt(anchorDaySel.value, 10)).padStart(2, '0');
+    anchorStr = '2000-' + mm + '-' + dd;
+    persist(); anchorEditBox.style.display = 'none'; render();
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', async function () {
+    var payload = JSON.stringify({ entries: data, anchor: anchorStr }, null, 2);
+    var downloads = null;
+    try { downloads = await claude.use('downloads'); } catch (e) {}
+    if (!downloads) { alert('L’export de fichier n’est pas disponible dans ce contexte.'); return; }
+    try {
+      await downloads.save({ filename: 'suivi-intermittent.json', data: payload });
+    } catch (e) {
+      if (e && e.code !== 'declined') alert('Export impossible : ' + (e && e.message ? e.message : e));
+    }
+  });
+
+  document.getElementById('importBtn').addEventListener('click', function () {
+    document.getElementById('importFile').click();
+  });
+  document.getElementById('importFile').addEventListener('change', function (ev) {
+    var file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var parsed = JSON.parse(reader.result);
+        var entries = Array.isArray(parsed.entries) ? parsed.entries : (Array.isArray(parsed) ? parsed : null);
+        if (!entries) { alert('Fichier invalide.'); return; }
+        var replace = confirm('Remplacer toutes les données actuelles par ce fichier ?\nAnnuler pour fusionner avec les données existantes.');
+        if (replace) {
+          data = entries;
+        } else {
+          var existingIds = new Set(data.map(function (e) { return e.id; }));
+          entries.forEach(function (e) { if (!existingIds.has(e.id)) data.push(e); });
+        }
+        if (parsed.anchor) { anchorStr = parsed.anchor; }
+        persist(); render();
+      } catch (e) {
+        alert('Impossible de lire ce fichier : ' + e.message);
+      }
+    };
+    reader.readAsText(file);
+    ev.target.value = '';
+  });
+
+  var themeBtn = document.getElementById('themeToggle');
+  try {
+    var savedTheme = localStorage.getItem('intermittent-theme');
+    if (savedTheme) { document.documentElement.setAttribute('data-theme', savedTheme); }
+  } catch (e) {}
+  function syncThemeLabel() {
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    themeBtn.textContent = isLight ? 'Mode sombre' : 'Mode clair';
+  }
+  syncThemeLabel();
+  themeBtn.addEventListener('click', function () {
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    var next = isLight ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next === 'light' ? 'light' : '');
+    try { localStorage.setItem('intermittent-theme', next); } catch (e) {}
+    syncThemeLabel();
+  });
+
+  document.getElementById('filterApply').addEventListener('click', function () {
+    var fromV = document.getElementById('filterFrom').value;
+    var toV = document.getElementById('filterTo').value;
+    if (!fromV && !toV) return;
+    customRange = { start: fromV ? parseISO(fromV) : null, end: toV ? parseISO(toV) : null };
+    document.getElementById('filterReset').style.display = '';
+    render();
+  });
+  document.getElementById('filterReset').addEventListener('click', function () {
+    customRange = null;
+    document.getElementById('filterFrom').value = '';
+    document.getElementById('filterTo').value = '';
+    document.getElementById('filterReset').style.display = 'none';
+    render();
+  });
+
+  var activeView = 'list';
+  var calendarMonth = new Date(); calendarMonth.setDate(1); calendarMonth.setHours(0, 0, 0, 0);
+
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      activeView = btn.getAttribute('data-view');
+      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.toggle('active', b === btn); });
+      document.getElementById('listView').style.display = activeView === 'list' ? '' : 'none';
+      document.getElementById('calendarView').style.display = activeView === 'calendar' ? '' : 'none';
+      document.getElementById('statsView').style.display = activeView === 'stats' ? '' : 'none';
+      if (activeView === 'calendar') renderCalendar();
+      if (activeView === 'stats') renderStats();
+    });
+  });
+  document.getElementById('calPrev').addEventListener('click', function () { calendarMonth.setMonth(calendarMonth.getMonth() - 1); renderCalendar(); });
+  document.getElementById('calNext').addEventListener('click', function () { calendarMonth.setMonth(calendarMonth.getMonth() + 1); renderCalendar(); });
+
+  function entriesForDay(dayDate) {
+    return data.filter(function (e) {
+      if (e.type === 'engagement') {
+        var start = parseISO(e.date);
+        var end = e.endDate ? parseISO(e.endDate) : start;
+        return dayDate >= start && dayDate <= end;
+      }
+      return parseISO(e.date).getTime() === dayDate.getTime();
+    });
+  }
+
+  function renderCalendar() {
+    var y = calendarMonth.getFullYear(), m = calendarMonth.getMonth();
+    document.getElementById('calLabel').textContent = calendarMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    var startOffset = (new Date(y, m, 1).getDay() + 6) % 7;
+    var daysInMonth = new Date(y, m + 1, 0).getDate();
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+    var html = dayNames.map(function (n) { return '<div class="cal-day-name">' + n + '</div>'; }).join('');
+    for (var i = 0; i < startOffset; i++) html += '<div class="cal-cell empty"></div>';
+    for (var d = 1; d <= daysInMonth; d++) {
+      var dayDate = new Date(y, m, d);
+      var entries = entriesForDay(dayDate);
+      var dots = entries.map(function (e) {
+        var color = e.type === 'engagement' ? employerColor(e.name) : (e.type === 'conges' ? 'var(--blue)' : 'var(--teal)');
+        var isPrevu = e.type === 'engagement' && (e.status || 'effectue') === 'prevu';
+        var style = isPrevu ? ('background:transparent;border:2px solid ' + color) : ('background:' + color);
+        return '<span class="cal-dot" style="' + style + '"></span>';
+      }).join('');
+      var isWarn = entries.some(function (e) {
+        return e.type === 'engagement' && (e.status || 'effectue') === 'prevu' && parseISO(e.endDate || e.date) < today;
+      });
+      html += '<div class="cal-cell' + (dayDate.getTime() === today.getTime() ? ' today' : '') + (isWarn ? ' warn' : '') + '" data-day="' + d + '">' + d +
+        '<div class="dots">' + dots + '</div></div>';
+    }
+    var grid = document.getElementById('calGrid');
+    grid.innerHTML = html;
+    grid.querySelectorAll('.cal-cell:not(.empty)').forEach(function (cell) {
+      cell.addEventListener('click', function () {
+        var dayDate = new Date(y, m, parseInt(cell.getAttribute('data-day'), 10));
+        var entries = entriesForDay(dayDate);
+        var details = document.getElementById('calDetails');
+        if (entries.length === 0) { details.innerHTML = '<p class="hint">Rien ce jour-là.</p>'; return; }
+        details.innerHTML = '<p class="list-title">' + fmtDate(dayDate) + '</p>' + entries.map(function (e) {
+          var val = e.type === 'engagement' ? (e.hours + ' h · ' + fmtEUR(e.brut) + (((e.status || 'effectue') === 'prevu') ? ' · prévu' : '')) : fmtEUR(e.amount);
+          var extra = (e.type === 'engagement' && (e.show || e.venue)) ? (' (' + [e.show, e.venue].filter(Boolean).map(escapeHtml).join(' · ') + ')') : '';
+          return '<div class="entry">' + escapeHtml(e.name) + extra + ' — ' + val + '</div>';
+        }).join('');
+      });
+    });
+    document.getElementById('calDetails').innerHTML = '';
+  }
+
+  function renderStats() {
+    var filtered = data.filter(function (e) {
+      if (!customRange) return true;
+      var d = parseISO(e.date);
+      if (customRange.start && d < customRange.start) return false;
+      if (customRange.end && d > customRange.end) return false;
+      return true;
+    });
+    var months = [];
+    if (customRange) {
+      var firstDate = customRange.start;
+      if (!firstDate) {
+        var engDates = filtered.filter(function (e) { return e.type === 'engagement'; }).map(function (e) { return e.date; }).sort();
+        firstDate = engDates.length ? parseISO(engDates[0]) : new Date();
+      }
+      var lastDate = customRange.end || new Date();
+      var cursorM = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+      var endM = new Date(lastDate.getFullYear(), lastDate.getMonth(), 1);
+      var guard = 0;
+      while (cursorM <= endM && guard < 36) {
+        months.push({ y: cursorM.getFullYear(), m: cursorM.getMonth(), hours: 0 });
+        cursorM.setMonth(cursorM.getMonth() + 1);
+        guard++;
+      }
+      if (months.length === 0) months.push({ y: lastDate.getFullYear(), m: lastDate.getMonth(), hours: 0 });
+    } else {
+      var cursor = new Date(); cursor.setDate(1); cursor.setHours(0, 0, 0, 0);
+      for (var i = 11; i >= 0; i--) {
+        var d0 = new Date(cursor.getFullYear(), cursor.getMonth() - i, 1);
+        months.push({ y: d0.getFullYear(), m: d0.getMonth(), hours: 0 });
+      }
+    }
+    var employersSet = new Set();
+    var totalBrutEng = 0, engCount = 0, totalDaysEng = 0;
+    var monthsSet = new Set(), netPayeTotal = 0, indemTotal = 0, congesTotal = 0, impotsTotal = 0, hasImpot = 0;
+    filtered.forEach(function (e) {
+      var fd = parseISO(e.date);
+      monthsSet.add(fd.getFullYear() + '-' + fd.getMonth());
+      if (e.type === 'indemnisation') { indemTotal += e.amount; return; }
+      if (e.type === 'conges') { congesTotal += e.amount; return; }
+      employersSet.add(e.name);
+      totalBrutEng += e.brut; engCount++;
+      totalDaysEng += daysSpan(e);
+      if (typeof e.paye === 'number') netPayeTotal += e.paye;
+      if (typeof e.avant === 'number' && typeof e.paye === 'number') { impotsTotal += (e.avant - e.paye); hasImpot++; }
+      else if (typeof e.social === 'number' && typeof e.paye === 'number') { impotsTotal += (e.social - e.paye); hasImpot++; }
+      var ed = parseISO(e.date);
+      for (var j = 0; j < months.length; j++) {
+        if (months[j].y === ed.getFullYear() && months[j].m === ed.getMonth()) { months[j].hours += e.hours; break; }
+      }
+    });
+    var monthsCount = monthsSet.size || 1;
+    var avgMonthly = (netPayeTotal + indemTotal + congesTotal) / monthsCount;
+    var maxHours = 1;
+    months.forEach(function (mo) { if (mo.hours > maxHours) maxHours = mo.hours; });
+    var maxMonth = null;
+    months.forEach(function (mo) { if (mo.hours > 0 && (!maxMonth || mo.hours > maxMonth.hours)) maxMonth = mo; });
+    var barsHtml = months.map(function (mo) {
+      var h = Math.round((mo.hours / maxHours) * 100);
+      var label = new Date(mo.y, mo.m, 1).toLocaleDateString('fr-FR', { month: 'short' });
+      return '<div class="bar-col"><div class="bar-track"><div class="bar-value">' + (mo.hours ? Math.round(mo.hours * 10) / 10 : '') + '</div><div class="bar" style="height:' + h + '%"></div></div><div class="bar-label">' + label + '</div></div>';
+    }).join('');
+    var maxMonthLabel = maxMonth ? new Date(maxMonth.y, maxMonth.m, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : '—';
+
+    var perEmployer = {};
+    filtered.forEach(function (e) {
+      if (e.type !== 'engagement') return;
+      if (!perEmployer[e.name]) perEmployer[e.name] = { hours: 0, brut: 0, days: 0 };
+      perEmployer[e.name].hours += e.hours;
+      perEmployer[e.name].brut += e.brut;
+      perEmployer[e.name].days += daysSpan(e);
+    });
+    var empRows = Object.keys(perEmployer).sort(function (a, b) { return perEmployer[b].brut - perEmployer[a].brut; }).map(function (name) {
+      var s = perEmployer[name];
+      var taux = s.hours ? fmtEUR(s.brut / s.hours) + '<small>/h</small>' : '—';
+      var parJour = s.days ? fmtEUR(s.brut / s.days) + '<small>/jour</small>' : '—';
+      return '<div class="emp-row">' +
+        '<span class="emp-name"><span class="cal-dot" style="display:inline-block;background:' + employerColor(name) + '"></span>' + name + '</span>' +
+        '<span class="num">' + (Math.round(s.hours * 10) / 10) + '<small>heures</small></span>' +
+        '<span class="num">' + fmtEUR(s.brut) + '<small>brut</small></span>' +
+        '<span class="num">' + taux + '</span>' +
+        '<span class="num">' + parJour + '</span>' +
+        '</div>';
+    }).join('');
+
+    var perYearStats = {};
+    data.forEach(function (e) {
+      var y = parseISO(e.date).getFullYear();
+      if (!perYearStats[y]) perYearStats[y] = { hours: 0, brut: 0, indem: 0, conges: 0, paye: 0, employers: new Set() };
+      if (e.type === 'engagement') {
+        perYearStats[y].hours += e.hours; perYearStats[y].brut += e.brut; perYearStats[y].employers.add(e.name);
+        if (typeof e.paye === 'number') perYearStats[y].paye += e.paye;
+      }
+      else if (e.type === 'indemnisation') perYearStats[y].indem += e.amount;
+      else if (e.type === 'conges') perYearStats[y].conges += e.amount;
+    });
+    var yearsAsc = Object.keys(perYearStats).sort();
+    var maxYearTotal = 1;
+    yearsAsc.forEach(function (y) {
+      var s = perYearStats[y];
+      var tot = s.brut + s.indem + s.conges;
+      if (tot > maxYearTotal) maxYearTotal = tot;
+    });
+    var yearBarsHtml = yearsAsc.map(function (y) {
+      var s = perYearStats[y];
+      var tot = s.brut + s.indem + s.conges;
+      var h = Math.round((tot / maxYearTotal) * 100);
+      return '<div class="bar-col" data-year="' + y + '" style="cursor:pointer"><div class="bar-track"><div class="bar-value">' + fmtEUR(tot) + '</div><div class="bar" style="height:' + h + '%"></div></div><div class="bar-label">' + y + '</div></div>';
+    }).join('');
+    var yearRows = yearsAsc.slice().reverse().map(function (y) {
+      var s = perYearStats[y];
+      return '<div class="emp-row" data-year="' + y + '" style="cursor:pointer">' +
+        '<span class="emp-name">' + y + '</span>' +
+        '<span class="num">' + (Math.round(s.hours * 10) / 10) + '<small>heures</small></span>' +
+        '<span class="num">' + fmtEUR(s.brut) + '<small>brut</small></span>' +
+        '<span class="num">' + (s.paye ? fmtEUR(s.paye) : '—') + '<small>net payé</small></span>' +
+        '<span class="num">' + fmtEUR(s.indem) + '<small>indemnisations</small></span>' +
+        '<span class="num">' + fmtEUR(s.conges) + '<small>congés</small></span>' +
+        '</div>';
+    }).join('');
+
+    document.getElementById('statsView').innerHTML =
+      '<p class="list-title">Évolution par année <span class="hint" style="display:inline">(cliquez une année pour filtrer)</span></p>' +
+      '<div class="bar-chart">' + yearBarsHtml + '</div>' +
+      '<div class="emp-table" style="margin-bottom:18px">' + yearRows + '</div>' +
+      '<p class="list-title">' + (customRange ? 'Heures par mois — période filtrée' : 'Heures par mois — 12 derniers mois') + '</p>' +
+      '<div class="bar-chart">' + barsHtml + '</div>' +
+      '<div class="mini-row"><span>Employeurs distincts</span><strong>' + employersSet.size + '</strong></div>' +
+      '<div class="mini-row"><span>Cachet brut moyen /jour</span><strong>' + (totalDaysEng ? fmtEUR(totalBrutEng / totalDaysEng) : '—') + '</strong></div>' +
+      '<div class="mini-row"><span>Brut (période)</span><strong>' + (engCount ? fmtEUR(totalBrutEng) : '—') + '</strong></div>' +
+      '<div class="mini-row"><span>Impôts (période)</span><strong>' + (hasImpot ? fmtEUR(impotsTotal) : '—') + '</strong></div>' +
+      '<div class="mini-row"><span>Net payé (période)</span><strong>' + (netPayeTotal ? fmtEUR(netPayeTotal) : '—') + '</strong></div>' +
+      '<div class="mini-row"><span>Revenu net moyen /mois</span><strong>' + fmtEUR(avgMonthly) + '</strong></div>' +
+      '<div class="mini-row"><span>Mois le plus chargé</span><strong>' + maxMonthLabel + '</strong></div>' +
+      '<div class="mini-row"><span>Engagements enregistrés</span><strong>' + engCount + '</strong></div>' +
+      (empRows ? ('<p class="list-title" style="margin-top:18px">Par employeur</p><div class="emp-table">' + empRows + '</div>') : '');
+
+    document.getElementById('statsView').querySelectorAll('[data-year]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var y = el.getAttribute('data-year');
+        customRange = { start: new Date(parseInt(y, 10), 0, 1), end: new Date(parseInt(y, 10), 11, 31) };
+        document.getElementById('filterFrom').value = y + '-01-01';
+        document.getElementById('filterTo').value = y + '-12-31';
+        document.getElementById('filterReset').style.display = '';
+        render();
+      });
+    });
+  }
+
+  (async function init() {
+    var loaded = await loadInitial();
+    data = loaded.entries;
+    anchorStr = loaded.anchor;
+    setConnBadge();
+    render();
+  })();
+})();
+</script>
+</body>
+</html>
