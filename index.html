@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Feuille de route — Intermittent</title>
+<title>suivi intermittence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -51,6 +51,7 @@
   .field { flex: 1 1 150px; min-width: 120px; }
   .field.wide { flex: 2 1 220px; }
   .field.narrow { flex: 0 0 140px; min-width: 110px; }
+  .field.filt { flex: 1 1 150px; max-width: 220px; min-width: 120px; }
   .filter-bar { display:flex; gap:10px; align-items:end; margin-bottom:16px; flex-wrap:wrap; }
   label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
   input, select {
@@ -87,7 +88,7 @@
   .cal-cell.today { border-color:var(--amber); }
   .cal-cell.warn { border-color:var(--rose); box-shadow:0 0 0 1px var(--rose) inset; }
   .cal-cell .dots { position:absolute; bottom:4px; left:4px; display:flex; gap:2px; flex-wrap:wrap; }
-  .cal-dot { width:9px; height:9px; border-radius:50%; }
+  .cal-dot { width:19px; height:19px; border-radius:50%; }
   .reminder-banner { background: rgba(201,112,100,0.14); border: 1px solid var(--rose); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; }
   .reminder-banner .r-item { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:4px 0; }
   .reminder-banner .r-item button { background:none; border:none; color:var(--amber); cursor:pointer; font-size:12px; white-space:nowrap; }
@@ -103,7 +104,7 @@
   .bar { width:100%; background:var(--amber); border-radius:4px 4px 0 0; min-height:2px; }
   .bar-label { flex:0 0 auto; font-size:10px; color:var(--muted); margin-top:4px; }
   .emp-table { margin-top:6px; }
-  .emp-row { display:grid; grid-template-columns:1fr repeat(5, auto); gap:14px; align-items:center; font-size:13px; padding:8px 0; border-bottom:1px solid var(--line); }
+  .emp-row { display:grid; grid-template-columns:1fr repeat(6, auto); gap:14px; align-items:center; font-size:13px; padding:8px 0; border-bottom:1px solid var(--line); }
   .emp-row:last-child { border-bottom:none; }
   .emp-name { display:flex; align-items:center; gap:8px; font-weight:500; }
   .emp-row .num { text-align:right; font-variant-numeric:tabular-nums; }
@@ -122,8 +123,8 @@
     <input type="file" id="importFile" accept="application/json" style="display:none">
     <button class="toggle-theme" id="themeToggle" type="button">Mode clair</button>
   </div>
-  <h1 class="marquee">Feuille de <em>route</em></h1>
-  <p class="subhead">Vos engagements, vos indemnisations, votre seuil des 507&nbsp;h — au même endroit.</p>
+  <h1 class="marquee">suivi intermittence</h1>
+  <p class="subhead">mes engagements, mes indemnisations, mon seuil des 507&nbsp;h</p>
 
   <div class="grid">
     <aside class="panel" aria-label="Statistiques">
@@ -185,12 +186,11 @@
           <label for="f-date-end">Date de fin</label>
           <input id="f-date-end" type="date" placeholder="si période">
         </div>
-        <div class="field eng-group">
-          <label for="f-status">Statut</label>
-          <select id="f-status">
-            <option value="prevu">Prévu</option>
-            <option value="effectue">Effectué</option>
-          </select>
+        <div class="field eng-group" style="display:flex;align-items:center;padding-top:22px">
+          <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;color:var(--text);font-size:14px">
+            <input id="f-paid" type="checkbox" style="width:auto">
+            Payé
+          </label>
         </div>
         <div class="field wide eng-group">
           <label for="f-show">Spectacle</label>
@@ -204,11 +204,11 @@
         </div>
         <div class="field eng-group">
           <label for="f-hours">Heures</label>
-          <input id="f-hours" type="number" min="0" step="0.5" placeholder="8">
+          <input id="f-hours" type="number" min="0" step="0.5" placeholder="facultatif">
         </div>
         <div class="field eng-group">
           <label for="f-brut">Brut (€)</label>
-          <input id="f-brut" type="number" min="0" step="0.01" placeholder="220">
+          <input id="f-brut" type="number" min="0" step="0.01" placeholder="facultatif">
         </div>
         <div class="field eng-group">
           <label for="f-social">Net social (€)</label>
@@ -245,6 +245,14 @@
             <label for="filterTo">au</label>
             <input type="date" id="filterTo">
           </div>
+          <div class="field filt">
+            <label for="filterEmployer">Employeur</label>
+            <select id="filterEmployer"><option value="">Tous</option></select>
+          </div>
+          <div class="field filt">
+            <label for="filterShow">Spectacle</label>
+            <select id="filterShow"><option value="">Tous</option></select>
+          </div>
           <button class="link-btn" id="filterApply" type="button">Appliquer</button>
           <button class="link-btn" id="filterReset" type="button" style="display:none">Réinitialiser</button>
         </div>
@@ -278,6 +286,13 @@
   var data = [];
   var anchorStr = null;
   var customRange = null;
+  var filterEmployer = '';
+  var filterShow = '';
+  function matchesEntityFilter(e) {
+    if (filterEmployer && e.name !== filterEmployer) return false;
+    if (filterShow && e.show !== filterShow) return false;
+    return true;
+  }
   var isRemote = false;
 
   function loadLocalFallback() {
@@ -335,6 +350,42 @@
   function parseISO(iso) { return new Date(iso + 'T00:00:00'); }
   function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
 
+  // Ancien champ "statut" (prévu / effectué) -> case "Payé"
+  function migrateEntries(list) {
+    list.forEach(function (e) {
+      if (e.type === 'indemnisation' || e.type === 'conges') return;
+      if (typeof e.estPaye !== 'boolean') e.estPaye = (e.status || 'effectue') !== 'prevu';
+      delete e.status;
+    });
+    return list;
+  }
+  var STATE_LABEL = { paid: 'payé', upcoming: 'prévu', ongoing: 'en cours', unpaid: 'non payé' };
+  function entryState(e) {
+    if (e.estPaye) return 'paid';
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    if (parseISO(e.date) > today) return 'upcoming';
+    if (parseISO(e.endDate || e.date) < today) return 'unpaid';
+    return 'ongoing';
+  }
+  function validateEntityFilters() {
+    var eng = data.filter(function (e) { return e.type === 'engagement'; });
+    if (filterEmployer && !eng.some(function (e) { return e.name === filterEmployer; })) filterEmployer = '';
+    if (filterShow && !eng.some(function (e) { return e.show === filterShow && (!filterEmployer || e.name === filterEmployer); })) filterShow = '';
+  }
+  function updateResetVisibility() {
+    document.getElementById('filterReset').style.display = (customRange || filterEmployer || filterShow) ? '' : 'none';
+  }
+  function fillFilterSelect(sel, values, current) {
+    var sig = values.join('\u0001');
+    if (sel.getAttribute('data-sig') !== sig) {
+      sel.setAttribute('data-sig', sig);
+      sel.innerHTML = '';
+      var all = document.createElement('option'); all.value = ''; all.textContent = 'Tous'; sel.appendChild(all);
+      values.forEach(function (v) { var o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
+    }
+    sel.value = current;
+  }
+
   var EMPLOYER_PALETTE = ['#E3A548', '#C97064', '#8E7CC3', '#5FA8D3', '#9BBF65', '#D98CB3', '#DDBB55', '#8FA6A0', '#E08E45', '#A98CD9'];
   function employerColor(name) {
     var hash = 0;
@@ -371,10 +422,13 @@
   }
 
   function render() {
+    validateEntityFilters();
+    updateResetVisibility();
     var period = getPeriod();
     var now = new Date(); now.setHours(0,0,0,0);
     var upper = period.end < now ? period.end : now;
     var sorted = data.slice().filter(function (e) {
+      if (!matchesEntityFilter(e)) return false;
       if (!customRange) return true;
       var d = parseISO(e.date);
       if (customRange.start && d < customRange.start) return false;
@@ -386,16 +440,17 @@
     var imposable = 0, hasImposable = 0, avant = 0, hasAvant = 0;
     var totalBrutAll = 0, totalIndemAll = 0, totalCongesAll = 0;
     data.forEach(function (e) {
+      if (!matchesEntityFilter(e)) return;
       var d = parseISO(e.date);
       if (e.type === 'indemnisation' || e.type === 'conges') {
         if (e.type === 'indemnisation') { totalIndemAll += e.amount; if (d >= period.start && d <= upper) indem += e.amount; }
         else { totalCongesAll += e.amount; if (d >= period.start && d <= upper) conges += e.amount; }
         return;
       }
-      totalBrutAll += e.brut;
+      totalBrutAll += (e.brut || 0);
       if (d >= period.start && d <= upper) {
-        hours += e.hours;
-        brut += e.brut;
+        hours += (e.hours || 0);
+        brut += (e.brut || 0);
         if (typeof e.social === 'number') { social += e.social; hasSocial++; }
         if (typeof e.imposable === 'number') { imposable += e.imposable; hasImposable++; }
         if (typeof e.avant === 'number') { avant += e.avant; hasAvant++; }
@@ -410,11 +465,13 @@
     bar.className = 'ring-fill' + (hours >= THRESHOLD ? ' done' : '');
 
     var anchorPeriod = getAnchorPeriod();
-    var hoursPlanned = 0;
+    var hoursPlanned = 0, plannedUnknown = 0;
     data.forEach(function (e) {
-      if (e.type !== 'engagement') return;
+      if (e.type !== 'engagement' || !matchesEntityFilter(e)) return;
       var d = parseISO(e.date);
-      if (d > now && d <= anchorPeriod.end) hoursPlanned += e.hours;
+      if (d > now && d <= anchorPeriod.end) {
+        if (typeof e.hours === 'number') hoursPlanned += e.hours; else plannedUnknown++;
+      }
     });
     var pctPlanned = Math.max(0, Math.min(100 - pct, (hoursPlanned / THRESHOLD) * 100));
     var barPlanned = document.getElementById('hoursBarPlanned');
@@ -424,10 +481,11 @@
     var periodTxt = customRange
       ? 'Filtre : ' + (customRange.start ? fmtDate(customRange.start) : '…') + ' → ' + (customRange.end ? fmtDate(customRange.end) : "aujourd'hui")
       : 'Période : ' + fmtDate(period.start) + ' → ' + fmtDate(period.end) + (period.anchored ? '' : ' (par défaut, sans date anniversaire)');
-    var plannedTxt = (anchorPeriod.anchored && hoursPlanned > 0)
-      ? (' + ' + (Math.round(hoursPlanned * 10) / 10) + ' h prévues d’ici le ' + fmtDate(anchorPeriod.end) + '.')
+    var plannedTxt = (anchorPeriod.anchored && (hoursPlanned > 0 || plannedUnknown > 0))
+      ? (' + ' + (Math.round(hoursPlanned * 10) / 10) + ' h prévues d’ici le ' + fmtDate(anchorPeriod.end)
+         + (plannedUnknown ? ' (+ ' + plannedUnknown + ' engagement(s) à venir sans heures renseignées)' : '') + '.')
       : '';
-    document.getElementById('hoursHint').textContent = periodTxt + ' — ' + (hours >= THRESHOLD ? 'seuil atteint.' : ('encore ' + (Math.round((THRESHOLD - hours) * 10) / 10) + ' h à faire.')) + plannedTxt;
+    document.getElementById('hoursHint').textContent = periodTxt + ((filterEmployer || filterShow) ? ' · ' + [filterEmployer, filterShow].filter(Boolean).join(' / ') : '') + ' — ' + (hours >= THRESHOLD ? 'seuil atteint.' : ('encore ' + (Math.round((THRESHOLD - hours) * 10) / 10) + ' h à faire.')) + plannedTxt;
 
     document.getElementById('sumBrut').textContent = fmtEUR(brut);
     document.getElementById('sumSocial').textContent = hasSocial ? fmtEUR(social) : '—';
@@ -441,9 +499,10 @@
 
     var perYear = {};
     data.forEach(function (e) {
+      if (!matchesEntityFilter(e)) return;
       var y = parseISO(e.date).getFullYear();
       if (!perYear[y]) perYear[y] = { hours: 0, brut: 0, indem: 0, conges: 0 };
-      if (e.type === 'engagement') { perYear[y].hours += e.hours; perYear[y].brut += e.brut; }
+      if (e.type === 'engagement') { perYear[y].hours += (e.hours || 0); perYear[y].brut += (e.brut || 0); }
       else if (e.type === 'indemnisation') perYear[y].indem += e.amount;
       else if (e.type === 'conges') perYear[y].conges += e.amount;
     });
@@ -458,15 +517,11 @@
     if (activeView === 'calendar') renderCalendar();
     if (activeView === 'stats') renderStats();
 
-    var overdue = data.filter(function (e) {
-      if (e.type !== 'engagement' || (e.status || 'effectue') !== 'prevu') return false;
-      var end = e.endDate ? parseISO(e.endDate) : parseISO(e.date);
-      return end < now;
-    });
+    var overdue = data.filter(function (e) { return e.type === 'engagement' && entryState(e) === 'unpaid'; });
     var banner = document.getElementById('reminderBanner');
     if (overdue.length) {
       banner.style.display = '';
-      banner.innerHTML = '<strong>⚠ ' + overdue.length + ' engagement(s) passé(s) toujours marqué(s) « prévu »</strong> — vérifiez et mettez à jour le brut réel.' +
+      banner.innerHTML = '<strong>⚠ ' + overdue.length + ' engagement(s) passé(s) pas encore marqué(s) « payé »</strong> — vérifiez les heures et le brut réels, puis cochez « Payé ».' +
         overdue.map(function (e) {
           return '<div class="r-item"><span>' + escapeHtml(e.name) + ' · ' + fmtDate(parseISO(e.date)) + '</span><button data-id="' + e.id + '" type="button">modifier</button></div>';
         }).join('');
@@ -486,6 +541,10 @@
     document.getElementById('showList').innerHTML = shows.map(function (n) { return '<option value="' + n.replace(/"/g, '&quot;') + '">'; }).join('');
     var venues = Array.from(new Set(data.filter(function (e) { return e.type === 'engagement' && e.venue; }).map(function (e) { return e.venue; }))).sort();
     document.getElementById('venueList').innerHTML = venues.map(function (n) { return '<option value="' + n.replace(/"/g, '&quot;') + '">'; }).join('');
+
+    var showsForFilter = Array.from(new Set(data.filter(function (e) { return e.type === 'engagement' && e.show && (!filterEmployer || e.name === filterEmployer); }).map(function (e) { return e.show; }))).sort();
+    fillFilterSelect(document.getElementById('filterEmployer'), employers, filterEmployer);
+    fillFilterSelect(document.getElementById('filterShow'), showsForFilter, filterShow);
 
     var list = document.getElementById('list');
     if (sorted.length === 0) {
@@ -507,7 +566,9 @@
       } else {
         var imp = (typeof e.avant === 'number' && typeof e.paye === 'number') ? fmtEUR(e.avant - e.paye)
           : ((typeof e.social === 'number' && typeof e.paye === 'number') ? fmtEUR(e.social - e.paye) : '—');
-        var tagHtml = (e.status || 'effectue') === 'prevu' ? '<span class="tag" style="color:var(--rose);border-color:var(--rose)">prévu</span>' : '';
+        var st = entryState(e);
+        var tagColor = { paid: 'var(--teal)', upcoming: 'var(--muted)', ongoing: 'var(--muted)', unpaid: 'var(--rose)' }[st];
+        var tagHtml = '<span class="tag" style="color:' + tagColor + ';border-color:' + tagColor + '">' + STATE_LABEL[st] + '</span>';
         var subInfo = [e.show, e.venue].filter(Boolean).map(escapeHtml).join(' · ');
         var subHtml = subInfo ? '<div class="hint" style="margin:2px 0 0">' + subInfo + '</div>' : '';
         row.innerHTML =
@@ -528,8 +589,8 @@
           ? (fmtDate(parseISO(e.date)) + ' → ' + fmtDate(parseISO(e.endDate)))
           : fmtDate(parseISO(e.date));
         var chipSpans = row.querySelectorAll('.chip span');
-        chipSpans[0].textContent = e.hours + ' h';
-        chipSpans[1].textContent = fmtEUR(e.brut);
+        chipSpans[0].textContent = (typeof e.hours === 'number' ? e.hours : '?') + ' h';
+        chipSpans[1].textContent = typeof e.brut === 'number' ? fmtEUR(e.brut) : '?';
       }
       row.querySelector('.del').addEventListener('click', function () {
         if (!confirm('Supprimer « ' + e.name + ' » du ' + fmtDate(parseISO(e.date)) + ' ? Cette action est définitive.')) return;
@@ -559,11 +620,11 @@
       document.getElementById('f-amount').value = e.amount;
     } else {
       document.getElementById('f-name').value = e.name;
-      document.getElementById('f-status').value = e.status || 'effectue';
+      document.getElementById('f-paid').checked = !!e.estPaye;
       document.getElementById('f-show').value = e.show || '';
       document.getElementById('f-venue').value = e.venue || '';
-      document.getElementById('f-hours').value = e.hours;
-      document.getElementById('f-brut').value = e.brut;
+      document.getElementById('f-hours').value = typeof e.hours === 'number' ? e.hours : '';
+      document.getElementById('f-brut').value = typeof e.brut === 'number' ? e.brut : '';
       document.getElementById('f-social').value = typeof e.social === 'number' ? e.social : '';
       document.getElementById('f-imposable').value = typeof e.imposable === 'number' ? e.imposable : '';
       document.getElementById('f-avant').value = typeof e.avant === 'number' ? e.avant : '';
@@ -618,8 +679,10 @@
       var imposableRaw = document.getElementById('f-imposable').value;
       var avantRaw = document.getElementById('f-avant').value;
       var payeRaw = document.getElementById('f-paye').value;
-      if (!name || isNaN(hours) || isNaN(brut)) return;
-      var entry = { id: id, type: 'engagement', name: name, date: date, hours: hours, brut: brut, status: document.getElementById('f-status').value };
+      if (!name) return;
+      var entry = { id: id, type: 'engagement', name: name, date: date, estPaye: document.getElementById('f-paid').checked };
+      if (!isNaN(hours)) entry.hours = hours;
+      if (!isNaN(brut)) entry.brut = brut;
       var showVal = document.getElementById('f-show').value.trim();
       var venueVal = document.getElementById('f-venue').value.trim();
       if (showVal) entry.show = showVal;
@@ -675,14 +738,21 @@
 
   document.getElementById('exportBtn').addEventListener('click', async function () {
     var payload = JSON.stringify({ entries: data, anchor: anchorStr }, null, 2);
+    var filename = 'suivi-intermittent-' + new Date().toISOString().slice(0, 10) + '.json';
     var downloads = null;
-    try { downloads = await claude.use('downloads'); } catch (e) {}
-    if (!downloads) { alert('L’export de fichier n’est pas disponible dans ce contexte.'); return; }
-    try {
-      await downloads.save({ filename: 'suivi-intermittent.json', data: payload });
-    } catch (e) {
-      if (e && e.code !== 'declined') alert('Export impossible : ' + (e && e.message ? e.message : e));
+    try { if (typeof claude !== 'undefined' && claude.use) downloads = await claude.use('downloads'); } catch (e) {}
+    if (downloads) {
+      try { await downloads.save({ filename: filename, data: payload }); }
+      catch (e) { if (e && e.code !== 'declined') alert('Export impossible : ' + (e && e.message ? e.message : e)); }
+      return;
     }
+    // Navigateur classique (serveur maison, fichier local) : téléchargement standard
+    var blob = new Blob([payload], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
   });
 
   document.getElementById('importBtn').addEventListener('click', function () {
@@ -697,6 +767,7 @@
         var parsed = JSON.parse(reader.result);
         var entries = Array.isArray(parsed.entries) ? parsed.entries : (Array.isArray(parsed) ? parsed : null);
         if (!entries) { alert('Fichier invalide.'); return; }
+        entries = migrateEntries(entries);
         var replace = confirm('Remplacer toutes les données actuelles par ce fichier ?\nAnnuler pour fusionner avec les données existantes.');
         if (replace) {
           data = entries;
@@ -735,16 +806,21 @@
   document.getElementById('filterApply').addEventListener('click', function () {
     var fromV = document.getElementById('filterFrom').value;
     var toV = document.getElementById('filterTo').value;
-    if (!fromV && !toV) return;
-    customRange = { start: fromV ? parseISO(fromV) : null, end: toV ? parseISO(toV) : null };
-    document.getElementById('filterReset').style.display = '';
+    customRange = (fromV || toV) ? { start: fromV ? parseISO(fromV) : null, end: toV ? parseISO(toV) : null } : null;
+    render();
+  });
+  document.getElementById('filterEmployer').addEventListener('change', function (ev) {
+    filterEmployer = ev.target.value;
+    render();
+  });
+  document.getElementById('filterShow').addEventListener('change', function (ev) {
+    filterShow = ev.target.value;
     render();
   });
   document.getElementById('filterReset').addEventListener('click', function () {
-    customRange = null;
+    customRange = null; filterEmployer = ''; filterShow = '';
     document.getElementById('filterFrom').value = '';
     document.getElementById('filterTo').value = '';
-    document.getElementById('filterReset').style.display = 'none';
     render();
   });
 
@@ -767,6 +843,7 @@
 
   function entriesForDay(dayDate) {
     return data.filter(function (e) {
+      if (!matchesEntityFilter(e)) return false;
       if (e.type === 'engagement') {
         var start = parseISO(e.date);
         var end = e.endDate ? parseISO(e.endDate) : start;
@@ -790,12 +867,12 @@
       var entries = entriesForDay(dayDate);
       var dots = entries.map(function (e) {
         var color = e.type === 'engagement' ? employerColor(e.name) : (e.type === 'conges' ? 'var(--blue)' : 'var(--teal)');
-        var isPrevu = e.type === 'engagement' && (e.status || 'effectue') === 'prevu';
+        var isPrevu = e.type === 'engagement' && !e.estPaye;
         var style = isPrevu ? ('background:transparent;border:2px solid ' + color) : ('background:' + color);
         return '<span class="cal-dot" style="' + style + '"></span>';
       }).join('');
       var isWarn = entries.some(function (e) {
-        return e.type === 'engagement' && (e.status || 'effectue') === 'prevu' && parseISO(e.endDate || e.date) < today;
+        return e.type === 'engagement' && entryState(e) === 'unpaid';
       });
       html += '<div class="cal-cell' + (dayDate.getTime() === today.getTime() ? ' today' : '') + (isWarn ? ' warn' : '') + '" data-day="' + d + '">' + d +
         '<div class="dots">' + dots + '</div></div>';
@@ -809,7 +886,7 @@
         var details = document.getElementById('calDetails');
         if (entries.length === 0) { details.innerHTML = '<p class="hint">Rien ce jour-là.</p>'; return; }
         details.innerHTML = '<p class="list-title">' + fmtDate(dayDate) + '</p>' + entries.map(function (e) {
-          var val = e.type === 'engagement' ? (e.hours + ' h · ' + fmtEUR(e.brut) + (((e.status || 'effectue') === 'prevu') ? ' · prévu' : '')) : fmtEUR(e.amount);
+          var val = e.type === 'engagement' ? ((typeof e.hours === 'number' ? e.hours : '?') + ' h · ' + (typeof e.brut === 'number' ? fmtEUR(e.brut) : '?') + (' · ' + STATE_LABEL[entryState(e)])) : fmtEUR(e.amount);
           var extra = (e.type === 'engagement' && (e.show || e.venue)) ? (' (' + [e.show, e.venue].filter(Boolean).map(escapeHtml).join(' · ') + ')') : '';
           return '<div class="entry">' + escapeHtml(e.name) + extra + ' — ' + val + '</div>';
         }).join('');
@@ -820,6 +897,7 @@
 
   function renderStats() {
     var filtered = data.filter(function (e) {
+      if (!matchesEntityFilter(e)) return false;
       if (!customRange) return true;
       var d = parseISO(e.date);
       if (customRange.start && d < customRange.start) return false;
@@ -852,21 +930,19 @@
     }
     var employersSet = new Set();
     var totalBrutEng = 0, engCount = 0, totalDaysEng = 0;
-    var monthsSet = new Set(), netPayeTotal = 0, indemTotal = 0, congesTotal = 0, impotsTotal = 0, hasImpot = 0;
+    var monthsSet = new Set(), netPayeTotal = 0, indemTotal = 0, congesTotal = 0;
     filtered.forEach(function (e) {
       var fd = parseISO(e.date);
       monthsSet.add(fd.getFullYear() + '-' + fd.getMonth());
       if (e.type === 'indemnisation') { indemTotal += e.amount; return; }
       if (e.type === 'conges') { congesTotal += e.amount; return; }
       employersSet.add(e.name);
-      totalBrutEng += e.brut; engCount++;
+      totalBrutEng += (e.brut || 0); engCount++;
       totalDaysEng += daysSpan(e);
       if (typeof e.paye === 'number') netPayeTotal += e.paye;
-      if (typeof e.avant === 'number' && typeof e.paye === 'number') { impotsTotal += (e.avant - e.paye); hasImpot++; }
-      else if (typeof e.social === 'number' && typeof e.paye === 'number') { impotsTotal += (e.social - e.paye); hasImpot++; }
       var ed = parseISO(e.date);
       for (var j = 0; j < months.length; j++) {
-        if (months[j].y === ed.getFullYear() && months[j].m === ed.getMonth()) { months[j].hours += e.hours; break; }
+        if (months[j].y === ed.getFullYear() && months[j].m === ed.getMonth()) { months[j].hours += (e.hours || 0); break; }
       }
     });
     var monthsCount = monthsSet.size || 1;
@@ -886,8 +962,8 @@
     filtered.forEach(function (e) {
       if (e.type !== 'engagement') return;
       if (!perEmployer[e.name]) perEmployer[e.name] = { hours: 0, brut: 0, days: 0 };
-      perEmployer[e.name].hours += e.hours;
-      perEmployer[e.name].brut += e.brut;
+      perEmployer[e.name].hours += (e.hours || 0);
+      perEmployer[e.name].brut += (e.brut || 0);
       perEmployer[e.name].days += daysSpan(e);
     });
     var empRows = Object.keys(perEmployer).sort(function (a, b) { return perEmployer[b].brut - perEmployer[a].brut; }).map(function (name) {
@@ -905,11 +981,14 @@
 
     var perYearStats = {};
     data.forEach(function (e) {
+      if (!matchesEntityFilter(e)) return;
       var y = parseISO(e.date).getFullYear();
-      if (!perYearStats[y]) perYearStats[y] = { hours: 0, brut: 0, indem: 0, conges: 0, paye: 0, employers: new Set() };
+      if (!perYearStats[y]) perYearStats[y] = { hours: 0, brut: 0, indem: 0, conges: 0, paye: 0, impots: 0, employers: new Set() };
       if (e.type === 'engagement') {
-        perYearStats[y].hours += e.hours; perYearStats[y].brut += e.brut; perYearStats[y].employers.add(e.name);
+        perYearStats[y].hours += (e.hours || 0); perYearStats[y].brut += (e.brut || 0); perYearStats[y].employers.add(e.name);
         if (typeof e.paye === 'number') perYearStats[y].paye += e.paye;
+        if (typeof e.avant === 'number' && typeof e.paye === 'number') perYearStats[y].impots += (e.avant - e.paye);
+        else if (typeof e.social === 'number' && typeof e.paye === 'number') perYearStats[y].impots += (e.social - e.paye);
       }
       else if (e.type === 'indemnisation') perYearStats[y].indem += e.amount;
       else if (e.type === 'conges') perYearStats[y].conges += e.amount;
@@ -934,6 +1013,7 @@
         '<span class="num">' + (Math.round(s.hours * 10) / 10) + '<small>heures</small></span>' +
         '<span class="num">' + fmtEUR(s.brut) + '<small>brut</small></span>' +
         '<span class="num">' + (s.paye ? fmtEUR(s.paye) : '—') + '<small>net payé</small></span>' +
+        '<span class="num">' + (s.impots ? fmtEUR(s.impots) : '—') + '<small>impôts</small></span>' +
         '<span class="num">' + fmtEUR(s.indem) + '<small>indemnisations</small></span>' +
         '<span class="num">' + fmtEUR(s.conges) + '<small>congés</small></span>' +
         '</div>';
@@ -947,9 +1027,6 @@
       '<div class="bar-chart">' + barsHtml + '</div>' +
       '<div class="mini-row"><span>Employeurs distincts</span><strong>' + employersSet.size + '</strong></div>' +
       '<div class="mini-row"><span>Cachet brut moyen /jour</span><strong>' + (totalDaysEng ? fmtEUR(totalBrutEng / totalDaysEng) : '—') + '</strong></div>' +
-      '<div class="mini-row"><span>Brut (période)</span><strong>' + (engCount ? fmtEUR(totalBrutEng) : '—') + '</strong></div>' +
-      '<div class="mini-row"><span>Impôts (période)</span><strong>' + (hasImpot ? fmtEUR(impotsTotal) : '—') + '</strong></div>' +
-      '<div class="mini-row"><span>Net payé (période)</span><strong>' + (netPayeTotal ? fmtEUR(netPayeTotal) : '—') + '</strong></div>' +
       '<div class="mini-row"><span>Revenu net moyen /mois</span><strong>' + fmtEUR(avgMonthly) + '</strong></div>' +
       '<div class="mini-row"><span>Mois le plus chargé</span><strong>' + maxMonthLabel + '</strong></div>' +
       '<div class="mini-row"><span>Engagements enregistrés</span><strong>' + engCount + '</strong></div>' +
@@ -969,7 +1046,7 @@
 
   (async function init() {
     var loaded = await loadInitial();
-    data = loaded.entries;
+    data = migrateEntries(loaded.entries);
     anchorStr = loaded.anchor;
     setConnBadge();
     render();
