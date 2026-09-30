@@ -12,13 +12,13 @@
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
     --bg: #1B1A17; --surface: #242220; --surface-2: #2C2A26; --line: #3A372F;
-    --text: #F2EDE4; --muted: #A79E8E; --amber: #783f49; --amber-text: #F2EDE4; --teal: #6FA88C; --rose: #C97064; --blue: #7FA8C9;
+    --text: #F2EDE4; --muted: #A79E8E; --amber: #783f49; --amber-text: #F2EDE4; --amber-link: #C98A96; --teal: #6FA88C; --rose: #C97064; --blue: #7FA8C9;
   }
   html { scroll-padding-top: env(safe-area-inset-top, 0px); }
   :root:not([data-theme="light"]) { color-scheme: dark; }
   :root[data-theme="light"] {
     --bg: #F6F3EC; --surface: #FFFFFF; --surface-2: #FBF9F4;
-    --line: #E3DCCB; --text: #2A2723; --muted: #7D7566;
+    --line: #E3DCCB; --text: #2A2723; --muted: #7D7566; --amber-link: #783f49;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text);
@@ -45,7 +45,7 @@
   .mini-row.total { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 9px; font-weight: 600; }
   .anchor-edit { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
   .anchor-edit select { flex: 1; }
-  .link-btn { background: none; border: none; color: var(--amber); font-size: 12px; cursor: pointer; padding: 0; }
+  .link-btn { background: none; border: none; color: var(--amber-link); font-size: 12px; cursor: pointer; padding: 0; }
   form.add { display: flex; flex-wrap: wrap; gap: 12px; align-items: end;
     background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 18px; }
   .field { flex: 1 1 150px; min-width: 120px; }
@@ -74,7 +74,7 @@
   .chip small { display: block; color: var(--muted); font-size: 11px; }
   .icon-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 4px 6px; }
   .icon-btn.del:hover { color: var(--rose); }
-  .icon-btn.edit:hover { color: var(--amber); }
+  .icon-btn.edit:hover { color: var(--amber-link); }
   .empty { text-align: center; color: var(--muted); padding: 40px 10px; font-size: 14px; }
   .tabs { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
   .tab-btn { background:none; border:1px solid var(--line); color:var(--muted); border-radius:20px; padding:6px 14px; font-size:13px; cursor:pointer; }
@@ -91,10 +91,7 @@
   .cal-dot { width:19px; height:19px; border-radius:50%; }
   .reminder-banner { background: rgba(201,112,100,0.14); border: 1px solid var(--rose); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; }
   .reminder-banner .r-item { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:4px 0; }
-  .reminder-banner .r-item button { background:none; border:none; color:var(--amber); cursor:pointer; font-size:12px; white-space:nowrap; }
-  .cal-dot.engagement { background:var(--amber); }
-  .cal-dot.indemnisation { background:var(--teal); }
-  .cal-dot.conges { background:var(--blue); }
+  .reminder-banner .r-item button { background:none; border:none; color:var(--amber-link); cursor:pointer; font-size:12px; white-space:nowrap; }
   .cal-details { margin-top:14px; font-size:13px; }
   .cal-details .entry { padding:6px 0; border-bottom:1px solid var(--line); }
   .bar-chart { display:flex; align-items:flex-end; gap:6px; height:120px; margin-bottom:16px; }
@@ -151,6 +148,9 @@
         <div class="mini-row"><span>Indemnisations</span><strong id="sumIndem">0 €</strong></div>
         <div class="mini-row"><span>Congés spectacle</span><strong id="sumConges">0 €</strong></div>
         <div class="mini-row total"><span>Total perçu</span><strong id="sumTotal">0 €</strong></div>
+      </div>
+      <div class="stat-block" id="renewalBlock" style="display:none">
+        <p class="hint" id="renewalHint"></p>
       </div>
       <div class="stat-block">
         <p class="stat-label">Cumul par année</p>
@@ -269,18 +269,19 @@
             <button class="link-btn" id="calNext" type="button">suivant ›</button>
           </div>
           <div class="cal-grid" id="calGrid"></div>
+          <p class="hint" style="margin-top:10px">● jour effectué &nbsp;·&nbsp; ○ jour à venir &nbsp;·&nbsp; cadre rouge : effectué mais pas encore payé</p>
           <div id="calDetails" class="cal-details"></div>
         </div>
         <div id="statsView" style="display:none"></div>
       </div>
     </main>
   </div>
+  <p class="hint" style="text-align:right;margin-top:36px">Une remarque, un bug ? <a href="mailto:fleurazcin@tuta.io" style="color:var(--amber-link)">fleurazcin@tuta.io</a></p>
 </div>
 
 <script>
 (function () {
   var KEY = 'intermittent-engagements-v3';
-  var LEGACY_KEY = 'intermittent-engagements-v2';
   var ANCHOR_KEY = 'intermittent-anchor-v1';
   var THRESHOLD = 507;
   var data = [];
@@ -299,11 +300,6 @@
     try {
       var raw = localStorage.getItem(KEY);
       if (raw) return { entries: JSON.parse(raw), anchor: localStorage.getItem(ANCHOR_KEY) };
-      var legacy = localStorage.getItem(LEGACY_KEY);
-      if (legacy) {
-        var old = JSON.parse(legacy);
-        if (Array.isArray(old)) return { entries: old.map(function (e) { e.type = 'engagement'; return e; }), anchor: localStorage.getItem(ANCHOR_KEY) };
-      }
     } catch (e) {}
     return { entries: [], anchor: null };
   }
@@ -346,6 +342,7 @@
   }
 
   function fmtEUR(n) { return Math.round(n).toLocaleString('fr-FR') + ' €'; }
+  function fmtShort(n) { return n >= 1000 ? (Math.round(n / 100) / 10).toLocaleString('fr-FR') + ' k' : String(Math.round(n)); }
   function fmtDate(d) { return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }); }
   function parseISO(iso) { return new Date(iso + 'T00:00:00'); }
   function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
@@ -386,12 +383,33 @@
     sel.value = current;
   }
 
-  var EMPLOYER_PALETTE = ['#E3A548', '#C97064', '#8E7CC3', '#5FA8D3', '#9BBF65', '#D98CB3', '#DDBB55', '#8FA6A0', '#E08E45', '#A98CD9'];
-  function employerColor(name) {
-    var hash = 0;
-    for (var i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-    return EMPLOYER_PALETTE[hash % EMPLOYER_PALETTE.length];
+  // Palette de teintes bien séparées ; les employeurs les plus fréquents reçoivent les premières couleurs
+  var EMPLOYER_PALETTE = ['#E08E45', '#5A86E0', '#A7C957', '#D98CB3', '#9B6FD0', '#C25B5B', '#4FAE6A', '#B95FAE', '#B08D6A', '#8A94A6'];
+  var employerColorMap = {};
+  function buildEmployerColors() {
+    var stats = {};
+    data.forEach(function (e) {
+      if (e.type !== 'engagement') return;
+      var st = stats[e.name] || (stats[e.name] = { n: 0, first: e.date });
+      st.n++;
+      if (e.date < st.first) st.first = e.date;
+    });
+    var names = Object.keys(stats).sort(function (a, b) {
+      return (stats[b].n - stats[a].n) || (stats[a].first < stats[b].first ? -1 : stats[a].first > stats[b].first ? 1 : 0) || a.localeCompare(b);
+    });
+    employerColorMap = {};
+    names.forEach(function (n, i) { employerColorMap[n] = EMPLOYER_PALETTE[i % EMPLOYER_PALETTE.length]; });
   }
+  function employerColor(name) { return employerColorMap[name] || '#8A94A6'; }
+  function renderRenewalProjection() {
+    var block = document.getElementById('renewalBlock');
+    var anchorPeriod = getAnchorPeriod();
+    if (!anchorPeriod.anchored) { block.style.display = 'none'; return; }
+    document.getElementById('renewalHint').innerHTML =
+      'Avec ces chiffres, simulez votre futur taux sur le <a href="https://simucalcul.pole-emploi-services.fr/" target="_blank" rel="noopener" style="color:var(--amber-link)">simulateur officiel France Travail</a>.';
+    block.style.display = '';
+  }
+
   function daysSpan(e) {
     if (!e.endDate) return 1;
     var ms = parseISO(e.endDate) - parseISO(e.date);
@@ -422,6 +440,7 @@
   }
 
   function render() {
+    buildEmployerColors();
     validateEntityFilters();
     updateResetVisibility();
     var period = getPeriod();
@@ -438,16 +457,13 @@
 
     var hours = 0, brut = 0, social = 0, netPaye = 0, hasSocial = 0, hasNet = 0, indem = 0, conges = 0;
     var imposable = 0, hasImposable = 0, avant = 0, hasAvant = 0;
-    var totalBrutAll = 0, totalIndemAll = 0, totalCongesAll = 0;
     data.forEach(function (e) {
       if (!matchesEntityFilter(e)) return;
       var d = parseISO(e.date);
       if (e.type === 'indemnisation' || e.type === 'conges') {
-        if (e.type === 'indemnisation') { totalIndemAll += e.amount; if (d >= period.start && d <= upper) indem += e.amount; }
-        else { totalCongesAll += e.amount; if (d >= period.start && d <= upper) conges += e.amount; }
+        if (d >= period.start && d <= upper) { if (e.type === 'indemnisation') indem += e.amount; else conges += e.amount; }
         return;
       }
-      totalBrutAll += (e.brut || 0);
       if (d >= period.start && d <= upper) {
         hours += (e.hours || 0);
         brut += (e.brut || 0);
@@ -510,10 +526,11 @@
     document.getElementById('yearlyCumul').innerHTML = years.map(function (y) {
       var s = perYear[y];
       var tot = s.brut + s.indem + s.conges;
-      return '<div class="mini-row"><span>' + y + '</span><strong>' + fmtEUR(tot) + '</strong></div>';
+      return '<div class="mini-row"><span>' + y + '</span><span><strong>' + fmtEUR(tot) + '</strong> <small style="color:var(--muted)">· ' + (Math.round(s.hours * 10) / 10) + ' h</small></span></div>';
     }).join('') || '<p class="hint">Aucune donnée.</p>';
 
     document.getElementById('countHint').textContent = data.length + (data.length > 1 ? ' entrées enregistrées' : ' entrée enregistrée');
+    renderRenewalProjection();
     if (activeView === 'calendar') renderCalendar();
     if (activeView === 'stats') renderStats();
 
@@ -865,9 +882,9 @@
     for (var d = 1; d <= daysInMonth; d++) {
       var dayDate = new Date(y, m, d);
       var entries = entriesForDay(dayDate);
-      var dots = entries.map(function (e) {
-        var color = e.type === 'engagement' ? employerColor(e.name) : (e.type === 'conges' ? 'var(--blue)' : 'var(--teal)');
-        var isPrevu = e.type === 'engagement' && !e.estPaye;
+      var dots = entries.filter(function (e) { return e.type === 'engagement'; }).map(function (e) {
+        var color = employerColor(e.name);
+        var isPrevu = dayDate > today;
         var style = isPrevu ? ('background:transparent;border:2px solid ' + color) : ('background:' + color);
         return '<span class="cal-dot" style="' + style + '"></span>';
       }).join('');
@@ -1004,7 +1021,7 @@
       var s = perYearStats[y];
       var tot = s.brut + s.indem + s.conges;
       var h = Math.round((tot / maxYearTotal) * 100);
-      return '<div class="bar-col" data-year="' + y + '" style="cursor:pointer"><div class="bar-track"><div class="bar-value">' + fmtEUR(tot) + '</div><div class="bar" style="height:' + h + '%"></div></div><div class="bar-label">' + y + '</div></div>';
+      return '<div class="bar-col" data-year="' + y + '" style="cursor:pointer"><div class="bar-track"><div class="bar-value">' + (yearsAsc.length > 8 ? fmtShort(tot) : fmtEUR(tot)) + '</div><div class="bar" style="height:' + h + '%"></div></div><div class="bar-label">' + y + '</div></div>';
     }).join('');
     var yearRows = yearsAsc.slice().reverse().map(function (y) {
       var s = perYearStats[y];
