@@ -47,6 +47,6 @@ Pour un ancien .xls ou un fichier Numbers, enregistrez-le d’abord en .xlsx, .o
 
 ## Un problème, une remarque ?
 
-Ouvrez une « Issue » sur la page GitHub du projet : https://github.com/unlocked036/suivinter/issues (un compte GitHub gratuit est nécessaire).
+Ouvrez une « Issue » sur la page GitHub du projet : https://github.com/unlocked036/suivinter/issues.
 
 Ces messages sont publics : merci de **ne pas y écrire vos chiffres personnels** (montants, employeurs…) quand vous décrivez un problème.
