@@ -4,8 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>suivi intermittence</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1B1A17">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Suivi">
 <style>
   :root {
     box-sizing: border-box;
@@ -13,6 +18,7 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
     --bg: #1B1A17; --surface: #242220; --surface-2: #2C2A26; --line: #3A372F;
     --text: #F2EDE4; --muted: #A79E8E; --amber: #783f49; --amber-text: #F2EDE4; --amber-link: #C98A96; --teal: #6FA88C; --rose: #C97064; --blue: #7FA8C9;
+    --ft-color: #8C8778; --cs-color: #5F5B51;
   }
   html { scroll-padding-top: env(safe-area-inset-top, 0px); }
   :root:not([data-theme="light"]) { color-scheme: dark; }
@@ -22,19 +28,20 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-height: 100%; }
+    font-family: Frutiger, "Frutiger Neue", "Myriad Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; min-height: 100%; }
   .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
-  .marquee { font-family: 'Fraunces', Georgia, serif; font-size: clamp(28px, 5vw, 40px);
+  .marquee { font-family: Frutiger, "Frutiger Neue", "Myriad Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: clamp(28px, 5vw, 40px);
     font-weight: 600; letter-spacing: -0.01em; margin: 0 0 4px; }
   .marquee em { font-style: italic; color: var(--amber); font-weight: 400; }
   .subhead { color: var(--muted); margin: 0 0 28px; font-size: 15px; }
   .grid { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
   @media (max-width: 780px) { .grid { grid-template-columns: 1fr; } }
+  .grid > main, .grid > aside { min-width: 0; }
   .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
   .stat-block + .stat-block { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
   .stat-label { font-size: 13px; color: var(--muted); margin: 0 0 6px; display:flex; justify-content:space-between; gap:8px; align-items:center; }
-  .stat-value { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 600; margin: 0; line-height: 1; }
-  .stat-value small { font-family: Inter, sans-serif; font-size: 14px; font-weight: 500; color: var(--muted); }
+  .stat-value { font-size: 28px; font-weight: 600; margin: 0; line-height: 1; }
+  .stat-value small { font-size: 14px; font-weight: 500; color: var(--muted); }
   .ring-track { width: 100%; height: 8px; border-radius: 5px; background: var(--surface-2); overflow: hidden; margin-top: 12px; position: relative; }
   .ring-fill { height: 100%; background: var(--amber); border-radius: 5px; transition: width .4s ease; position: absolute; left: 0; top: 0; }
   .ring-fill.done { background: var(--teal); }
@@ -42,22 +49,34 @@
   .hint { font-size: 12.5px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
   .mini-row { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; }
   .mini-row strong { font-variant-numeric: tabular-nums; }
+  .cumul-row { display: grid; grid-template-columns: 1fr auto 50px; gap: 8px; }
+  .cumul-row small { text-align: right; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
   .mini-row.total { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 9px; font-weight: 600; }
   .anchor-edit { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
   .anchor-edit select { flex: 1; }
+  .link-btn:disabled { opacity: .35; cursor: default; }
   .link-btn { background: none; border: none; color: var(--amber-link); font-size: 12px; cursor: pointer; padding: 0; }
-  form.add { display: flex; flex-wrap: wrap; gap: 12px; align-items: end;
+  form.add { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: end;
     background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 18px; }
-  .field { flex: 1 1 150px; min-width: 120px; }
-  .field.wide { flex: 2 1 220px; }
-  .field.narrow { flex: 0 0 140px; min-width: 110px; }
-  .field.filt { flex: 1 1 150px; max-width: 220px; min-width: 120px; }
-  .filter-bar { display:flex; gap:10px; align-items:end; margin-bottom:16px; flex-wrap:wrap; }
+  .field { min-width: 0; }
+  form.add .field.wide { grid-column: span 2; }
+  form.add .check-field { display: flex; align-items: center; height: 38px; }
+  form.add .check-field label { display: flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; color: var(--text); font-size: 14px; }
+  form.add .check-field input { width: auto; }
+  form.add button.primary { width: 100%; min-height: 38px; overflow: hidden; text-overflow: ellipsis; }
+  form.add #cancelEditBtn { grid-column: 1 / -1; justify-self: end; }
+  .filter-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 12px; align-items: end; margin-bottom: 16px; }
+  .filter-actions { display: flex; gap: 16px; align-items: center; height: 38px; }
+  @media (max-width: 640px) {
+    form.add { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
   label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
   input, select {
     width: 100%; background: var(--surface-2); border: 1px solid var(--line); color: var(--text);
     border-radius: 8px; padding: 9px 10px; font-size: 14px; font-family: inherit;
   }
+  input:not([type="checkbox"]), select { height: 38px; }
   input:focus, select:focus, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
   button.primary { background: var(--amber); color: var(--amber-text); border: none; border-radius: 8px;
     padding: 10px 18px; font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap; flex: 0 0 auto; }
@@ -65,22 +84,31 @@
   .list-title { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
   .row { padding: 14px 0; border-bottom: 1px solid var(--line); }
   .row:last-child { border-bottom: none; }
-  .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .row-top { display: grid; grid-template-columns: minmax(0, 1fr) 205px auto; gap: 10px; align-items: baseline; }
   .row .name { font-weight: 500; }
+  .est { font-style: italic; color: var(--muted); }
   .row .tag { font-size: 11px; color: var(--blue); border: 1px solid var(--line); border-radius: 10px; padding: 1px 8px; margin-left: 8px; }
-  .row .date { color: var(--muted); font-size: 13px; white-space: nowrap; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; }
-  .chip { font-size: 13px; font-variant-numeric: tabular-nums; }
+  .row .date { color: var(--muted); font-size: 13px; white-space: nowrap; text-align: right; }
+  .chips { display: grid; grid-template-columns: 42px 60px 52px 70px 60px 44px 52px; justify-content: end; gap: 6px 10px; margin-top: 8px; }
+  .chip { font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
+  .chip.c-avant { grid-column: 5; } .chip.c-tax { grid-column: 6; } .chip.c-net { grid-column: 7; }
+  @media (max-width: 640px) {
+    .row-top { grid-template-columns: minmax(0, 1fr) auto; }
+    .row .date { grid-column: 1 / -1; grid-row: 2; text-align: left; }
+    .chips { grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); }
+    .chip { text-align: left; }
+    .chip.c-avant, .chip.c-tax, .chip.c-net { grid-column: auto; }
+  }
   .chip small { display: block; color: var(--muted); font-size: 11px; }
   .icon-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 4px 6px; }
   .icon-btn.del:hover { color: var(--rose); }
   .icon-btn.edit:hover { color: var(--amber-link); }
-  .empty { text-align: center; color: var(--muted); padding: 40px 10px; font-size: 14px; }
+  .empty-state { text-align: center; color: var(--muted); padding: 40px 10px; font-size: 14px; }
   .tabs { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
   .tab-btn { background:none; border:1px solid var(--line); color:var(--muted); border-radius:20px; padding:6px 14px; font-size:13px; cursor:pointer; }
   .tab-btn.active { background:var(--amber); color:var(--amber-text); border-color:var(--amber); font-weight:600; }
   .cal-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-  .cal-label { font-family:'Fraunces',serif; font-size:16px; font-weight:600; text-transform:capitalize; }
+  .cal-label { font-size:16px; font-weight:600; text-transform:capitalize; }
   .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
   .cal-day-name { font-size:11px; color:var(--muted); text-align:center; padding-bottom:4px; }
   .cal-cell { aspect-ratio:1; border:1px solid var(--line); border-radius:8px; padding:4px; font-size:12px; cursor:pointer; position:relative; background:var(--surface-2); }
@@ -88,27 +116,53 @@
   .cal-cell.today { border-color:var(--amber); }
   .cal-cell.warn { border-color:var(--rose); box-shadow:0 0 0 1px var(--rose) inset; }
   .cal-cell .dots { position:absolute; bottom:4px; left:4px; display:flex; gap:2px; flex-wrap:wrap; }
-  .cal-dot { width:19px; height:19px; border-radius:50%; }
+  .cal-dot { width:13px; height:13px; border-radius:50%; }
   .reminder-banner { background: rgba(201,112,100,0.14); border: 1px solid var(--rose); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; }
   .reminder-banner .r-item { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:4px 0; }
   .reminder-banner .r-item button { background:none; border:none; color:var(--amber-link); cursor:pointer; font-size:12px; white-space:nowrap; }
   .cal-details { margin-top:14px; font-size:13px; }
   .cal-details .entry { padding:6px 0; border-bottom:1px solid var(--line); }
-  .bar-chart { display:flex; align-items:flex-end; gap:6px; height:120px; margin-bottom:16px; }
-  .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; height:100%; }
+  .bar-chart { display:flex; align-items:flex-end; gap:4px; height:136px; padding-top:16px; margin-bottom:16px; overflow-x:auto; }
+  .bar-col { flex:1 0 28px; display:flex; flex-direction:column; align-items:center; height:100%; }
   .bar-track { flex:1 1 auto; min-height:0; width:100%; position:relative; display:flex; align-items:flex-end; justify-content:center; }
   .bar-value { position:absolute; bottom:100%; left:0; right:0; text-align:center; font-size:9px; color:var(--muted); margin-bottom:2px; white-space:nowrap; }
   .bar { width:100%; background:var(--amber); border-radius:4px 4px 0 0; min-height:2px; }
   .bar-label { flex:0 0 auto; font-size:10px; color:var(--muted); margin-top:4px; }
-  .emp-table { margin-top:6px; }
-  .emp-row { display:grid; grid-template-columns:1fr repeat(6, auto); gap:14px; align-items:center; font-size:13px; padding:8px 0; border-bottom:1px solid var(--line); }
-  .emp-row:last-child { border-bottom:none; }
-  .emp-name { display:flex; align-items:center; gap:8px; font-weight:500; }
+  .emp-table { margin-top: 6px; overflow-x: auto; display: grid; align-items: stretch; }
+  .emp-table.t6 { grid-template-columns: minmax(40px, 1fr) repeat(6, max-content); }
+  .emp-table.t5 { grid-template-columns: minmax(120px, 1fr) repeat(5, max-content); }
+  .emp-row { display: contents; font-size: 13px; }
+  .emp-row > * { padding: 8px 0 8px 12px; border-bottom: 1px solid var(--line); }
+  .emp-row > :first-child { padding-left: 0; }
+  .emp-row.pre-total > *, .emp-row:last-child > * { border-bottom: none; }
+  .emp-row.total > * { font-weight: 600; border-top: 1px solid var(--muted); padding-top: 10px; }
+  .emp-name { display:flex; align-items:center; gap:8px; font-weight:500; min-width:0; }
+  .emp-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .emp-row .num { text-align:right; font-variant-numeric:tabular-nums; }
   .emp-row .num small { display:block; color:var(--muted); font-size:10px; }
-  @media (max-width: 560px) { .emp-row { grid-template-columns: 1fr; text-align:left; gap:2px; } .emp-row .num { text-align:left; } }
   .top-actions { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
   .toggle-theme { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 20px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+
+  .sheet-dlg { width: min(780px, calc(100vw - 24px)); max-height: calc(100vh - 32px); background: var(--surface); color: var(--text);
+    border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; }
+  .sheet-dlg::backdrop { background: rgba(0, 0, 0, .55); }
+  .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 16px; }
+  .sheet-file { margin: 0 0 10px; font-size: 13.5px; color: var(--muted); }
+  .sheet-file strong { color: var(--text); }
+  .sheet-opts { display: flex; gap: 14px 22px; flex-wrap: wrap; align-items: flex-end; }
+  .sheet-opts label, .sheet-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); min-width: 0; }
+  .sheet-opts label.sheet-check { flex-direction: row; align-items: center; gap: 8px; color: var(--text); }
+  .sheet-opts label.sheet-check input { width: auto; height: auto; }
+  .sheet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+  @media (max-width: 640px) { .sheet-grid { grid-template-columns: 1fr; } }
+  .sheet-table { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+  .sheet-table table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .sheet-table th, .sheet-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .sheet-table th { color: var(--muted); font-weight: 500; }
+  .sheet-table tr:last-child td { border-bottom: none; }
+  .sheet-actions { display: flex; align-items: center; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+  .sheet-err { color: var(--rose); font-size: 13.5px; margin: 0 0 10px; }
+  button.primary:disabled { opacity: .45; cursor: default; }
 </style>
 </head>
 <body>
@@ -118,10 +172,12 @@
     <button class="toggle-theme" id="exportBtn" type="button">Exporter</button>
     <button class="toggle-theme" id="importBtn" type="button">Importer</button>
     <input type="file" id="importFile" accept="application/json" style="display:none">
+    <button class="toggle-theme" id="sheetBtn" type="button">Importer un tableur</button>
+    <input type="file" id="sheetFile" accept=".csv,.tsv,.txt,.xlsx,.xlsm,.ods" style="display:none">
     <button class="toggle-theme" id="themeToggle" type="button">Mode clair</button>
   </div>
   <h1 class="marquee">suivi intermittence</h1>
-  <p class="subhead">mes engagements, mes indemnisations, mon seuil des 507&nbsp;h</p>
+  <p class="subhead">local et gratuit</p>
 
   <div class="grid">
     <aside class="panel" aria-label="Statistiques">
@@ -137,8 +193,16 @@
           <button class="link-btn" id="anchorSave" type="button">valider</button>
         </div>
       </div>
+      <div class="stat-block" id="monthRecap">
+        <p class="stat-label"><span id="recapTitle">Mois en cours</span>
+          <span><button class="link-btn" id="recapPrev" type="button" aria-label="Mois précédent">‹</button>
+          <button class="link-btn" id="recapNext" type="button" aria-label="Mois suivant">›</button></span></p>
+        <div class="mini-row"><span>Heures</span><strong id="recapHours">0 h</strong></div>
+        <div class="mini-row"><span>Brut</span><strong id="recapBrut">0 €</strong></div>
+        <p class="hint" id="recapHint"></p>
+      </div>
       <div class="stat-block">
-        <p class="stat-label">Montants — même période</p>
+        <p class="stat-label">Montants — période de référence</p>
         <div class="mini-row"><span>Brut (travail)</span><strong id="sumBrut">0 €</strong></div>
         <div class="mini-row"><span>Net social</span><strong id="sumSocial">0 €</strong></div>
         <div class="mini-row"><span>Net imposable</span><strong id="sumImposable">—</strong></div>
@@ -153,7 +217,7 @@
         <p class="hint" id="renewalHint"></p>
       </div>
       <div class="stat-block">
-        <p class="stat-label">Cumul par année</p>
+        <p class="stat-label">Cumul par année (net)</p>
         <div id="yearlyCumul"></div>
         <p class="hint" id="countHint">0 entrée enregistrée</p>
       </div>
@@ -164,8 +228,8 @@
         <div class="field">
           <label for="f-type">Type</label>
           <select id="f-type">
-            <option value="engagement">Engagement (cachet)</option>
-            <option value="indemnisation">Indemnisation chômage</option>
+            <option value="engagement">Engagement</option>
+            <option value="indemnisation">France Travail</option>
             <option value="conges">Congés spectacle</option>
           </select>
         </div>
@@ -182,13 +246,13 @@
           <label for="f-date">Date de début</label>
           <input id="f-date" type="date" required>
         </div>
-        <div class="field">
+        <div class="field eng-group">
           <label for="f-date-end">Date de fin</label>
-          <input id="f-date-end" type="date" placeholder="si période">
+          <input id="f-date-end" type="date">
         </div>
-        <div class="field eng-group" style="display:flex;align-items:center;padding-top:22px">
-          <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;color:var(--text);font-size:14px">
-            <input id="f-paid" type="checkbox" style="width:auto">
+        <div class="field eng-group check-field">
+          <label>
+            <input id="f-paid" type="checkbox">
             Payé
           </label>
         </div>
@@ -218,8 +282,8 @@
           <label for="f-imposable">Net imposable (€)</label>
           <input id="f-imposable" type="number" min="0" step="0.01" placeholder="facultatif">
         </div>
-        <div class="field eng-group">
-          <label for="f-avant">Net à payer avant impôt (€)</label>
+        <div class="field">
+          <label for="f-avant">Montant avant impôt (€)</label>
           <input id="f-avant" type="number" min="0" step="0.01" placeholder="facultatif">
         </div>
         <div class="field eng-group">
@@ -237,31 +301,42 @@
       <div class="panel">
         <div id="reminderBanner" class="reminder-banner" style="display:none"></div>
         <div class="filter-bar">
-          <div class="field narrow">
+          <div class="field">
             <label for="filterFrom">Filtrer du</label>
             <input type="date" id="filterFrom">
           </div>
-          <div class="field narrow">
+          <div class="field">
             <label for="filterTo">au</label>
             <input type="date" id="filterTo">
           </div>
-          <div class="field filt">
+          <div class="field">
+            <label for="filterKind">Catégorie</label>
+            <select id="filterKind">
+              <option value="">Tout</option>
+              <option value="engagement">Engagements</option>
+              <option value="indemnisation">France Travail</option>
+              <option value="conges">Congés spectacle</option>
+            </select>
+          </div>
+          <div class="field">
             <label for="filterEmployer">Employeur</label>
             <select id="filterEmployer"><option value="">Tous</option></select>
           </div>
-          <div class="field filt">
+          <div class="field">
             <label for="filterShow">Spectacle</label>
             <select id="filterShow"><option value="">Tous</option></select>
           </div>
-          <button class="link-btn" id="filterApply" type="button">Appliquer</button>
-          <button class="link-btn" id="filterReset" type="button" style="display:none">Réinitialiser</button>
+          <div class="filter-actions">
+            <button class="link-btn" id="filterApply" type="button">Appliquer</button>
+            <button class="link-btn" id="filterReset" type="button" style="display:none">Réinitialiser</button>
+          </div>
         </div>
         <div class="tabs">
           <button class="tab-btn active" data-view="list" type="button">Historique</button>
           <button class="tab-btn" data-view="calendar" type="button">Calendrier</button>
           <button class="tab-btn" data-view="stats" type="button">Statistiques</button>
         </div>
-        <div id="listView"><div id="list"></div></div>
+        <div id="listView"><p class="hint" id="listScopeHint" style="margin:0 0 10px"></p><div id="list"></div></div>
         <div id="calendarView" style="display:none">
           <div class="cal-nav">
             <button class="link-btn" id="calPrev" type="button">‹ précédent</button>
@@ -276,25 +351,51 @@
       </div>
     </main>
   </div>
-  <p class="hint" style="text-align:right;margin-top:36px">Une remarque, un bug ? <a href="mailto:fleurazcin@tuta.io" style="color:var(--amber-link)">fleurazcin@tuta.io</a></p>
+  <p class="hint" style="text-align:right;margin-top:36px">Outil indicatif et non officiel : vérifiez toujours vos chiffres auprès de France Travail et de Congés Spectacles.</p>
+  <p class="hint" style="text-align:right;margin-top:6px">Une remarque, un bug ? <a href="mailto:yelp-tabasco-polar@duck.com" style="color:var(--amber-link)">yelp-tabasco-polar@duck.com</a>
+  </p>
 </div>
 
+<dialog id="sheetDlg" class="sheet-dlg" aria-label="Importer un tableur">
+  <div class="sheet-head"><strong>Importer un tableur</strong><button class="link-btn" id="sheetClose" type="button">Fermer</button></div>
+  <div id="sheetBody"></div>
+</dialog>
 <script>
 (function () {
   var KEY = 'intermittent-engagements-v3';
   var ANCHOR_KEY = 'intermittent-anchor-v1';
   var THRESHOLD = 507;
+  var FTE_HOURS = 1607;   // durée annuelle légale d'un temps plein (35 h/semaine) : 1 ETP = 1 607 h
   var data = [];
   var anchorStr = null;
   var customRange = null;
   var filterEmployer = '';
   var filterShow = '';
+  var filterKind = '';
+  var activeView = 'list';
+  var editingId = null;
+  var PAS_START = '2019-01-01';           // bascule du prélèvement à la source
+  function hasPAS(e) { return e.date >= PAS_START; }
+  // Paire (montant avant impôt, montant net) selon le type d'entrée
+  function taxPair(e) {
+    if (e.type === 'engagement') return { avant: e.avant, net: e.paye };
+    return { avant: e.avant, net: e.amount };
+  }
+  function entryTax(e) {
+    if (!hasPAS(e)) return null;          // pas de PAS avant 2019
+    var t = taxPair(e);
+    if (typeof t.avant === 'number' && typeof t.net === 'number') return t.avant - t.net;
+    if (e.type === 'engagement' && typeof e.social === 'number' && typeof e.paye === 'number') return e.social - e.paye;
+    return null;
+  }
   function matchesEntityFilter(e) {
+    if (filterKind && e.type !== filterKind) return false;
     if (filterEmployer && e.name !== filterEmployer) return false;
     if (filterShow && e.show !== filterShow) return false;
     return true;
   }
   var isRemote = false;
+  var dataVersion = null;
 
   function loadLocalFallback() {
     try {
@@ -310,6 +411,7 @@
       if (res.ok) {
         var json = await res.json();
         isRemote = true;
+        dataVersion = typeof json.version === 'number' ? json.version : null;
         return { entries: Array.isArray(json.entries) ? json.entries : [], anchor: json.anchor || null };
       }
     } catch (e) {}
@@ -323,9 +425,18 @@
         var res = await fetch('/api/data', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ entries: data, anchor: anchorStr })
+          body: JSON.stringify({ entries: data, anchor: anchorStr, expectedVersion: dataVersion })
         });
-        if (res.ok) return;
+        if (res.status === 409) {
+          alert('Quelqu’un a enregistré des données entre-temps depuis un autre appareil. La page va se recharger avec la dernière version pour éviter d’écraser son changement — votre dernière modification est à refaire.');
+          location.reload();
+          return;
+        }
+        if (res.ok) {
+          var result = await res.json();
+          if (typeof result.version === 'number') dataVersion = result.version;
+          return;
+        }
       } catch (e) {}
       isRemote = false;
       setConnBadge();
@@ -337,15 +448,22 @@
   function setConnBadge() {
     var el = document.getElementById('connBadge');
     if (!el) return;
-    el.textContent = isRemote ? 'Partagé (Mac mini)' : 'Local uniquement';
+    el.textContent = isRemote ? 'Synchronisé' : 'Local uniquement';
     el.style.color = isRemote ? 'var(--teal)' : 'var(--muted)';
+    el.title = isRemote ? 'Vos données sont enregistrées sur le serveur.' : 'Vos données restent dans ce navigateur : pensez à les sauvegarder de temps en temps avec « Exporter ».';
   }
 
+  function r1(n) { return Math.round(n * 10) / 10; }   // arrondi à 1 décimale
+  function uniqSorted(list, key) {
+    return Array.from(new Set(list.filter(function (e) { return e.type === 'engagement' && e[key]; }).map(function (e) { return e[key]; }))).sort();
+  }
+  function newBucket(y, m) { return { y: y, m: m, hours: 0, brut: 0, net: 0, ft: 0, cs: 0, byHours: {}, byBrut: {}, byNet: {} }; }
   function fmtEUR(n) { return Math.round(n).toLocaleString('fr-FR') + ' €'; }
   function fmtShort(n) { return n >= 1000 ? (Math.round(n / 100) / 10).toLocaleString('fr-FR') + ' k' : String(Math.round(n)); }
+  function fmtETP(h) { return (h / FTE_HOURS).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function fmtDate(d) { return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }); }
   function parseISO(iso) { return new Date(iso + 'T00:00:00'); }
-  function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
   // Ancien champ "statut" (prévu / effectué) -> case "Payé"
   function migrateEntries(list) {
@@ -370,7 +488,7 @@
     if (filterShow && !eng.some(function (e) { return e.show === filterShow && (!filterEmployer || e.name === filterEmployer); })) filterShow = '';
   }
   function updateResetVisibility() {
-    document.getElementById('filterReset').style.display = (customRange || filterEmployer || filterShow) ? '' : 'none';
+    document.getElementById('filterReset').style.display = (customRange || filterEmployer || filterShow || filterKind) ? '' : 'none';
   }
   function fillFilterSelect(sel, values, current) {
     var sig = values.join('\u0001');
@@ -401,6 +519,45 @@
     names.forEach(function (n, i) { employerColorMap[n] = EMPLOYER_PALETTE[i % EMPLOYER_PALETTE.length]; });
   }
   function employerColor(name) { return employerColorMap[name] || '#8A94A6'; }
+
+  // --- Estimation du brut attendu : heures × taux horaire récent de l'employeur.
+  //     Uniquement quand le serveur perso est connecté (isRemote), pas dans les copies locales.
+  var rateMap = {};
+  function isoOf(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function buildRates() {
+    rateMap = {};
+    if (!isRemote) return;
+    var cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear() - 2);
+    var cutoffIso = isoOf(cutoff);
+    var byEmp = {};
+    data.forEach(function (e) {
+      if (e.type !== 'engagement' || !(e.hours > 0) || !(e.brut > 0)) return;
+      (byEmp[e.name] = byEmp[e.name] || []).push(e);
+    });
+    Object.keys(byEmp).forEach(function (name) {
+      var all = byEmp[name].sort(function (a, b) { return b.date.localeCompare(a.date); });
+      var recent = all.filter(function (e) { return e.date >= cutoffIso; });
+      var use = recent.length >= 2 ? recent : all.slice(0, 5);   // 2 dernières années, sinon les 5 plus récents
+      var h = 0, b = 0;
+      use.forEach(function (e) { h += e.hours; b += e.brut; });
+      rateMap[name] = { rate: b / h, n: use.length };
+    });
+  }
+  function estBrut(e) {
+    if (!isRemote || e.type !== 'engagement' || typeof e.brut === 'number' || !(e.hours > 0)) return null;
+    var r = rateMap[e.name];
+    return r ? e.hours * r.rate : null;
+  }
+  function estTitle(e) {
+    var r = rateMap[e.name];
+    return r ? 'Estimation : ' + e.hours + ' h × ' + (r1(r.rate)) + ' €/h (moyenne de ' + r.n + ' engagement(s) chez ' + e.name + ')' : '';
+  }
+  function updateBrutPlaceholder() {
+    var inp = document.getElementById('f-brut');
+    var name = document.getElementById('f-name').value.trim();
+    var h = parseFloat(document.getElementById('f-hours').value);
+    inp.placeholder = (isRemote && name && h > 0 && rateMap[name]) ? '≈ ' + fmtEUR(h * rateMap[name].rate) + ' (estimé)' : 'facultatif';
+  }
   function renderRenewalProjection() {
     var block = document.getElementById('renewalBlock');
     var anchorPeriod = getAnchorPeriod();
@@ -439,8 +596,43 @@
     return getAnchorPeriod();
   }
 
+  // Récap du mois (actualisation) : indépendant des filtres, rattaché au mois de la date de début de chaque contrat
+  var recapOffset = 0;   // 0 = mois en cours, -1 = mois précédent…
+  function fmtCents(n) {
+    var v = Math.round(n * 100) / 100;
+    return v.toLocaleString('fr-FR', { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 });
+  }
+  function renderMonthRecap() {
+    var ref = new Date(); ref.setDate(1); ref.setMonth(ref.getMonth() + recapOffset);
+    var y = ref.getFullYear(), m = ref.getMonth();
+    var hours = 0, brut = 0, count = 0, noHours = 0, noBrut = 0;
+    data.forEach(function (e) {
+      if (e.type !== 'engagement') return;
+      var d = parseISO(e.date);
+      if (d.getFullYear() !== y || d.getMonth() !== m) return;
+      count++;
+      if (e.hours == null) noHours++; else hours += e.hours;
+      if (e.brut == null) noBrut++; else brut += e.brut;
+    });
+    var label = ref.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    label = label.charAt(0).toUpperCase() + label.slice(1);
+    document.getElementById('recapTitle').textContent = label + (recapOffset === 0 ? ' (en cours)' : '');
+    document.getElementById('recapHours').textContent = r1(hours).toLocaleString('fr-FR') + ' h';
+    document.getElementById('recapBrut').textContent = fmtCents(brut) + ' €';   // centimes conservés : utile pour la déclaration
+    var notes = [];
+    if (!count) notes.push('Aucun contrat ce mois-ci.');
+    if (noHours) notes.push(noHours + (noHours > 1 ? ' contrats sans heures' : ' contrat sans heures'));
+    if (noBrut) notes.push(noBrut + (noBrut > 1 ? ' contrats sans brut' : ' contrat sans brut'));
+    document.getElementById('recapHint').textContent = notes.join(' · ');
+    document.getElementById('recapNext').disabled = recapOffset >= 0;
+  }
+  document.getElementById('recapPrev').addEventListener('click', function () { recapOffset--; renderMonthRecap(); });
+  document.getElementById('recapNext').addEventListener('click', function () { if (recapOffset < 0) { recapOffset++; renderMonthRecap(); } });
+
   function render() {
+    renderMonthRecap();
     buildEmployerColors();
+    buildRates();
     validateEntityFilters();
     updateResetVisibility();
     var period = getPeriod();
@@ -448,33 +640,43 @@
     var upper = period.end < now ? period.end : now;
     var sorted = data.slice().filter(function (e) {
       if (!matchesEntityFilter(e)) return false;
-      if (!customRange) return true;
       var d = parseISO(e.date);
-      if (customRange.start && d < customRange.start) return false;
-      if (customRange.end && d > customRange.end) return false;
-      return true;
+      if (customRange) {
+        if (customRange.start && d < customRange.start) return false;
+        if (customRange.end && d > customRange.end) return false;
+        return true;
+      }
+      if (filterEmployer || filterShow || filterKind) return true; // un filtre explicite est actif : pas de restriction de date implicite
+      // sinon (vue par défaut) : seulement depuis la date anniversaire, pour ne pas noyer la page sous tout l'historique
+      return d >= getAnchorPeriod().start;
     }).sort(function (a, b) { return b.date.localeCompare(a.date); });
 
     var hours = 0, brut = 0, social = 0, netPaye = 0, hasSocial = 0, hasNet = 0, indem = 0, conges = 0;
-    var imposable = 0, hasImposable = 0, avant = 0, hasAvant = 0;
+    var imposable = 0, hasImposable = 0, avant = 0, hasAvant = 0, impotsSum = 0, hasImpotCount = 0, netOrBrut = 0;
     data.forEach(function (e) {
       if (!matchesEntityFilter(e)) return;
       var d = parseISO(e.date);
+      var inPeriod = d >= period.start && d <= upper;
       if (e.type === 'indemnisation' || e.type === 'conges') {
-        if (d >= period.start && d <= upper) { if (e.type === 'indemnisation') indem += e.amount; else conges += e.amount; }
+        if (inPeriod) {
+          if (e.type === 'indemnisation') indem += e.amount; else conges += e.amount;
+          var tx1 = entryTax(e); if (tx1 !== null) { impotsSum += tx1; hasImpotCount++; }
+        }
         return;
       }
-      if (d >= period.start && d <= upper) {
+      if (inPeriod) {
         hours += (e.hours || 0);
         brut += (e.brut || 0);
         if (typeof e.social === 'number') { social += e.social; hasSocial++; }
         if (typeof e.imposable === 'number') { imposable += e.imposable; hasImposable++; }
         if (typeof e.avant === 'number') { avant += e.avant; hasAvant++; }
         if (typeof e.paye === 'number') { netPaye += e.paye; hasNet++; }
+        netOrBrut += (typeof e.paye === 'number' ? e.paye : (e.brut || 0));
+        var tx2 = entryTax(e); if (tx2 !== null) { impotsSum += tx2; hasImpotCount++; }
       }
     });
 
-    document.getElementById('hoursValue').innerHTML = Math.round(hours * 10) / 10 + ' <small>/ 507 h</small>';
+    document.getElementById('hoursValue').innerHTML = r1(hours) + ' <small>/ ' + THRESHOLD + ' h</small>';
     var pct = Math.min(100, (hours / THRESHOLD) * 100);
     var bar = document.getElementById('hoursBar');
     bar.style.width = pct + '%';
@@ -498,36 +700,44 @@
       ? 'Filtre : ' + (customRange.start ? fmtDate(customRange.start) : '…') + ' → ' + (customRange.end ? fmtDate(customRange.end) : "aujourd'hui")
       : 'Période : ' + fmtDate(period.start) + ' → ' + fmtDate(period.end) + (period.anchored ? '' : ' (par défaut, sans date anniversaire)');
     var plannedTxt = (anchorPeriod.anchored && (hoursPlanned > 0 || plannedUnknown > 0))
-      ? (' + ' + (Math.round(hoursPlanned * 10) / 10) + ' h prévues d’ici le ' + fmtDate(anchorPeriod.end)
+      ? (' + ' + (r1(hoursPlanned)) + ' h prévues d’ici le ' + fmtDate(anchorPeriod.end)
          + (plannedUnknown ? ' (+ ' + plannedUnknown + ' engagement(s) à venir sans heures renseignées)' : '') + '.')
       : '';
-    document.getElementById('hoursHint').textContent = periodTxt + ((filterEmployer || filterShow) ? ' · ' + [filterEmployer, filterShow].filter(Boolean).join(' / ') : '') + ' — ' + (hours >= THRESHOLD ? 'seuil atteint.' : ('encore ' + (Math.round((THRESHOLD - hours) * 10) / 10) + ' h à faire.')) + plannedTxt;
+    document.getElementById('hoursHint').textContent = periodTxt + ((filterEmployer || filterShow) ? ' · ' + [filterEmployer, filterShow].filter(Boolean).join(' / ') : '') + ' — ' + (hours >= THRESHOLD ? 'seuil atteint.' : ('encore ' + (r1((THRESHOLD - hours))) + ' h à faire.')) + plannedTxt;
 
     document.getElementById('sumBrut').textContent = fmtEUR(brut);
     document.getElementById('sumSocial').textContent = hasSocial ? fmtEUR(social) : '—';
     document.getElementById('sumImposable').textContent = hasImposable ? fmtEUR(imposable) : '—';
     document.getElementById('sumAvant').textContent = hasAvant ? fmtEUR(avant) : '—';
-    document.getElementById('sumTax').textContent = (hasAvant && hasNet) ? fmtEUR(avant - netPaye) : ((hasSocial && hasNet) ? fmtEUR(social - netPaye) : '—');
+    document.getElementById('sumTax').textContent = hasImpotCount ? fmtEUR(impotsSum) : '—';
     document.getElementById('sumNet').textContent = hasNet ? fmtEUR(netPaye) : '—';
     document.getElementById('sumIndem').textContent = fmtEUR(indem);
     document.getElementById('sumConges').textContent = fmtEUR(conges);
-    document.getElementById('sumTotal').textContent = fmtEUR((hasNet ? netPaye : brut) + indem + conges);
+    document.getElementById('sumTotal').textContent = fmtEUR(netOrBrut + indem + conges);
 
     var perYear = {};
     data.forEach(function (e) {
       if (!matchesEntityFilter(e)) return;
       var y = parseISO(e.date).getFullYear();
-      if (!perYear[y]) perYear[y] = { hours: 0, brut: 0, indem: 0, conges: 0 };
-      if (e.type === 'engagement') { perYear[y].hours += (e.hours || 0); perYear[y].brut += (e.brut || 0); }
+      if (!perYear[y]) perYear[y] = { hours: 0, net: 0, indem: 0, conges: 0 };
+      if (e.type === 'engagement') {
+        perYear[y].hours += (e.hours || 0);
+        perYear[y].net += (typeof e.paye === 'number' ? e.paye : (e.brut || 0));
+      }
       else if (e.type === 'indemnisation') perYear[y].indem += e.amount;
       else if (e.type === 'conges') perYear[y].conges += e.amount;
     });
     var years = Object.keys(perYear).sort(function (a, b) { return b - a; });
-    document.getElementById('yearlyCumul').innerHTML = years.map(function (y) {
+    var cumNet = 0, cumHours = 0;
+    var cumRows = years.map(function (y) {
       var s = perYear[y];
-      var tot = s.brut + s.indem + s.conges;
-      return '<div class="mini-row"><span>' + y + '</span><span><strong>' + fmtEUR(tot) + '</strong> <small style="color:var(--muted)">· ' + (Math.round(s.hours * 10) / 10) + ' h</small></span></div>';
-    }).join('') || '<p class="hint">Aucune donnée.</p>';
+      var tot = s.net + s.indem + s.conges;
+      cumNet += tot; cumHours += s.hours;
+      return '<div class="mini-row cumul-row"><span>' + y + '</span><strong>' + fmtEUR(tot) + '</strong><small>' + (r1(s.hours)) + ' h</small></div>';
+    }).join('');
+    document.getElementById('yearlyCumul').innerHTML = cumRows
+      ? cumRows + '<div class="mini-row cumul-row total"><span>Total</span><strong>' + fmtEUR(cumNet) + '</strong><small>' + (r1(cumHours)) + ' h</small></div>'
+      : '<p class="hint">Aucune donnée.</p>';
 
     document.getElementById('countHint').textContent = data.length + (data.length > 1 ? ' entrées enregistrées' : ' entrée enregistrée');
     renderRenewalProjection();
@@ -540,7 +750,7 @@
       banner.style.display = '';
       banner.innerHTML = '<strong>⚠ ' + overdue.length + ' engagement(s) passé(s) pas encore marqué(s) « payé »</strong> — vérifiez les heures et le brut réels, puis cochez « Payé ».' +
         overdue.map(function (e) {
-          return '<div class="r-item"><span>' + escapeHtml(e.name) + ' · ' + fmtDate(parseISO(e.date)) + '</span><button data-id="' + e.id + '" type="button">modifier</button></div>';
+          return '<div class="r-item"><span>' + escapeHtml(e.name) + ' · ' + fmtDate(parseISO(e.date)) + '</span><button data-id="' + escapeHtml(e.id) + '" type="button">modifier</button></div>';
         }).join('');
       banner.querySelectorAll('button[data-id]').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -552,20 +762,23 @@
       banner.style.display = 'none';
     }
 
-    var employers = Array.from(new Set(data.filter(function (e) { return e.type === 'engagement'; }).map(function (e) { return e.name; }))).sort();
-    document.getElementById('employerList').innerHTML = employers.map(function (n) { return '<option value="' + n.replace(/"/g, '&quot;') + '">'; }).join('');
-    var shows = Array.from(new Set(data.filter(function (e) { return e.type === 'engagement' && e.show; }).map(function (e) { return e.show; }))).sort();
-    document.getElementById('showList').innerHTML = shows.map(function (n) { return '<option value="' + n.replace(/"/g, '&quot;') + '">'; }).join('');
-    var venues = Array.from(new Set(data.filter(function (e) { return e.type === 'engagement' && e.venue; }).map(function (e) { return e.venue; }))).sort();
-    document.getElementById('venueList').innerHTML = venues.map(function (n) { return '<option value="' + n.replace(/"/g, '&quot;') + '">'; }).join('');
+    var employers = uniqSorted(data, 'name');
+    document.getElementById('employerList').innerHTML = employers.map(function (n) { return '<option value="' + escapeHtml(n) + '">'; }).join('');
+    var shows = uniqSorted(data, 'show');
+    document.getElementById('showList').innerHTML = shows.map(function (n) { return '<option value="' + escapeHtml(n) + '">'; }).join('');
+    var venues = uniqSorted(data, 'venue');
+    document.getElementById('venueList').innerHTML = venues.map(function (n) { return '<option value="' + escapeHtml(n) + '">'; }).join('');
 
-    var showsForFilter = Array.from(new Set(data.filter(function (e) { return e.type === 'engagement' && e.show && (!filterEmployer || e.name === filterEmployer); }).map(function (e) { return e.show; }))).sort();
+    var showsForFilter = uniqSorted(data.filter(function (e) { return !filterEmployer || e.name === filterEmployer; }), 'show');
     fillFilterSelect(document.getElementById('filterEmployer'), employers, filterEmployer);
     fillFilterSelect(document.getElementById('filterShow'), showsForFilter, filterShow);
 
+    document.getElementById('listScopeHint').textContent = customRange
+      ? ''
+      : 'Depuis le ' + fmtDate(getAnchorPeriod().start) + ' (date anniversaire) — utilisez le filtre de dates ci-dessus pour remonter plus loin.';
     var list = document.getElementById('list');
     if (sorted.length === 0) {
-      list.innerHTML = '<div class="empty">Aucune entrée pour l’instant — ajoutez la première ci-dessus.</div>';
+      list.innerHTML = '<div class="empty-state">' + (data.length ? 'Rien depuis votre date anniversaire — élargissez le filtre de dates pour voir votre historique complet.' : 'Aucune entrée pour l’instant — ajoutez la première ci-dessus.') + '</div>';
       return;
     }
     list.innerHTML = '';
@@ -574,15 +787,18 @@
       row.className = 'row';
       if (e.type === 'indemnisation' || e.type === 'conges') {
         var tagLabel = e.type === 'conges' ? 'congés spectacle' : 'indemnisation';
+        var ftTax = (typeof e.avant === 'number') ? (hasPAS(e) ? fmtEUR(e.avant - e.amount) : '/') : null;
         row.innerHTML =
           '<div class="row-top"><span><span class="name"></span><span class="tag">' + tagLabel + '</span></span><span class="date"></span><span><button class="icon-btn edit" aria-label="Modifier" type="button">✎</button><button class="icon-btn del" aria-label="Supprimer" type="button">✕</button></span></div>' +
-          '<div class="chips"><div class="chip"><span></span><small>montant</small></div></div>';
+          '<div class="chips"><div class="chip c-net"><span></span><small>net payé</small></div>' +
+          (typeof e.avant === 'number' ? '<div class="chip c-avant"><span>' + fmtEUR(e.avant) + '</span><small>avant impôt</small></div><div class="chip c-tax"><span>' + ftTax + '</span><small>impôt</small></div>' : '') +
+          '</div>';
         row.querySelector('.name').textContent = e.name;
         row.querySelector('.date').textContent = fmtDate(parseISO(e.date));
         row.querySelector('.chip span').textContent = fmtEUR(e.amount);
       } else {
-        var imp = (typeof e.avant === 'number' && typeof e.paye === 'number') ? fmtEUR(e.avant - e.paye)
-          : ((typeof e.social === 'number' && typeof e.paye === 'number') ? fmtEUR(e.social - e.paye) : '—');
+        var engTax = entryTax(e);
+        var imp = engTax !== null ? fmtEUR(engTax) : (!hasPAS(e) && (typeof e.avant === 'number' || typeof e.social === 'number') && typeof e.paye === 'number' ? '/' : '—');
         var st = entryState(e);
         var tagColor = { paid: 'var(--teal)', upcoming: 'var(--muted)', ongoing: 'var(--muted)', unpaid: 'var(--rose)' }[st];
         var tagHtml = '<span class="tag" style="color:' + tagColor + ';border-color:' + tagColor + '">' + STATE_LABEL[st] + '</span>';
@@ -592,13 +808,13 @@
           '<div class="row-top"><span class="name"><span class="cal-dot" style="display:inline-block;margin-right:6px"></span><span class="ename"></span>' + tagHtml + '</span><span class="date"></span><span><button class="icon-btn edit" aria-label="Modifier" type="button">✎</button><button class="icon-btn del" aria-label="Supprimer" type="button">✕</button></span></div>' +
           subHtml +
           '<div class="chips">' +
-          '<div class="chip"><span></span><small>heures</small></div>' +
-          '<div class="chip"><span></span><small>brut</small></div>' +
-          '<div class="chip"><span>' + (typeof e.social === 'number' ? fmtEUR(e.social) : '—') + '</span><small>net social</small></div>' +
-          '<div class="chip"><span>' + (typeof e.imposable === 'number' ? fmtEUR(e.imposable) : '—') + '</span><small>net imposable</small></div>' +
-          '<div class="chip"><span>' + (typeof e.avant === 'number' ? fmtEUR(e.avant) : '—') + '</span><small>avant impôt</small></div>' +
-          '<div class="chip"><span>' + imp + '</span><small>impôt</small></div>' +
-          '<div class="chip"><span>' + (typeof e.paye === 'number' ? fmtEUR(e.paye) : '—') + '</span><small>net payé</small></div>' +
+          '<div class="chip c-hours"><span></span><small>heures</small></div>' +
+          '<div class="chip c-brut"><span></span><small>brut</small></div>' +
+          '<div class="chip c-social"><span>' + (typeof e.social === 'number' ? fmtEUR(e.social) : '—') + '</span><small>net social</small></div>' +
+          '<div class="chip c-imposable"><span>' + (typeof e.imposable === 'number' ? fmtEUR(e.imposable) : '—') + '</span><small>net imposable</small></div>' +
+          '<div class="chip c-avant"><span>' + (typeof e.avant === 'number' ? fmtEUR(e.avant) : '—') + '</span><small>avant impôt</small></div>' +
+          '<div class="chip c-tax"><span>' + imp + '</span><small>impôt</small></div>' +
+          '<div class="chip c-net"><span>' + (typeof e.paye === 'number' ? fmtEUR(e.paye) : '—') + '</span><small>net payé</small></div>' +
           '</div>';
         row.querySelector('.ename').textContent = e.name;
         row.querySelector('.name .cal-dot').style.background = employerColor(e.name);
@@ -607,7 +823,19 @@
           : fmtDate(parseISO(e.date));
         var chipSpans = row.querySelectorAll('.chip span');
         chipSpans[0].textContent = (typeof e.hours === 'number' ? e.hours : '?') + ' h';
-        chipSpans[1].textContent = typeof e.brut === 'number' ? fmtEUR(e.brut) : '?';
+        if (typeof e.brut === 'number') {
+          chipSpans[1].textContent = fmtEUR(e.brut);
+        } else {
+          var estRow = estBrut(e);
+          if (estRow !== null) {
+            chipSpans[1].textContent = '≈ ' + fmtEUR(estRow);
+            chipSpans[1].className = 'est';
+            chipSpans[1].title = estTitle(e);
+            chipSpans[1].parentNode.querySelector('small').textContent = 'brut estimé';
+          } else {
+            chipSpans[1].textContent = '?';
+          }
+        }
       }
       row.querySelector('.del').addEventListener('click', function () {
         if (!confirm('Supprimer « ' + e.name + ' » du ' + fmtDate(parseISO(e.date)) + ' ? Cette action est définitive.')) return;
@@ -620,7 +848,6 @@
     });
   }
 
-  var editingId = null;
   function setTypeUI(type) {
     var isIndemLike = type === 'indemnisation' || type === 'conges';
     document.querySelectorAll('.eng-group').forEach(function (g) { g.style.display = isIndemLike ? 'none' : ''; });
@@ -632,6 +859,7 @@
     setTypeUI(e.type);
     document.getElementById('f-date').value = e.date;
     document.getElementById('f-date-end').value = e.endDate || '';
+    document.getElementById('f-avant').value = typeof e.avant === 'number' ? e.avant : '';
     if (e.type === 'indemnisation' || e.type === 'conges') {
       document.getElementById('f-organisme').value = e.name;
       document.getElementById('f-amount').value = e.amount;
@@ -644,11 +872,11 @@
       document.getElementById('f-brut').value = typeof e.brut === 'number' ? e.brut : '';
       document.getElementById('f-social').value = typeof e.social === 'number' ? e.social : '';
       document.getElementById('f-imposable').value = typeof e.imposable === 'number' ? e.imposable : '';
-      document.getElementById('f-avant').value = typeof e.avant === 'number' ? e.avant : '';
       document.getElementById('f-paye').value = typeof e.paye === 'number' ? e.paye : '';
     }
-    document.getElementById('submitBtn').textContent = 'Enregistrer les modifications';
+    document.getElementById('submitBtn').textContent = 'Enregistrer';
     document.getElementById('cancelEditBtn').style.display = '';
+    updateBrutPlaceholder();
     document.getElementById('addForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
   function cancelEdit() {
@@ -657,11 +885,12 @@
     setTypeUI('engagement');
     document.getElementById('submitBtn').textContent = 'Ajouter';
     document.getElementById('cancelEditBtn').style.display = 'none';
+    updateBrutPlaceholder();
   }
   document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
+  document.getElementById('f-name').addEventListener('input', updateBrutPlaceholder);
+  document.getElementById('f-hours').addEventListener('input', updateBrutPlaceholder);
 
-  var engGroups = document.querySelectorAll('.eng-group');
-  var indemGroups = document.querySelectorAll('.indem-group');
   var defaultOrganisme = { indemnisation: 'France Travail', conges: 'Congés Spectacles' };
   document.getElementById('f-type').addEventListener('change', function (ev) {
     setTypeUI(ev.target.value);
@@ -670,6 +899,10 @@
       var orgField = document.getElementById('f-organisme');
       var currentIsDefault = orgField.value === '' || orgField.value === 'France Travail' || orgField.value === 'Congés Spectacles';
       if (currentIsDefault) orgField.value = d;
+    }
+    if (ev.target.value === 'conges' && !editingId) {
+      var dateField = document.getElementById('f-date');
+      if (!dateField.value) dateField.value = new Date().getFullYear() + '-05-01';
     }
   });
 
@@ -680,12 +913,13 @@
     if (!date) return;
     var id = editingId || (Date.now() + '-' + Math.random().toString(36).slice(2));
     var endRaw = document.getElementById('f-date-end').value;
+    var avantRaw = document.getElementById('f-avant').value;
     if (type === 'indemnisation' || type === 'conges') {
       var organisme = document.getElementById('f-organisme').value.trim() || defaultOrganisme[type];
       var amount = parseFloat(document.getElementById('f-amount').value);
       if (isNaN(amount)) return;
       var indemEntry = { id: id, type: type, name: organisme, date: date, amount: amount };
-      if (endRaw && endRaw > date) indemEntry.endDate = endRaw;
+      if (avantRaw !== '') indemEntry.avant = parseFloat(avantRaw);
       if (editingId) { data = data.map(function (x) { return x.id === editingId ? indemEntry : x; }); }
       else { data.push(indemEntry); }
     } else {
@@ -694,7 +928,6 @@
       var brut = parseFloat(document.getElementById('f-brut').value);
       var socialRaw = document.getElementById('f-social').value;
       var imposableRaw = document.getElementById('f-imposable').value;
-      var avantRaw = document.getElementById('f-avant').value;
       var payeRaw = document.getElementById('f-paye').value;
       if (!name) return;
       var entry = { id: id, type: 'engagement', name: name, date: date, estPaye: document.getElementById('f-paid').checked };
@@ -810,6 +1043,8 @@
   function syncThemeLabel() {
     var isLight = document.documentElement.getAttribute('data-theme') === 'light';
     themeBtn.textContent = isLight ? 'Mode sombre' : 'Mode clair';
+    var tc = document.querySelector('meta[name="theme-color"]');
+    if (tc) tc.setAttribute('content', isLight ? '#F6F3EC' : '#1B1A17');
   }
   syncThemeLabel();
   themeBtn.addEventListener('click', function () {
@@ -834,14 +1069,18 @@
     filterShow = ev.target.value;
     render();
   });
+  document.getElementById('filterKind').addEventListener('change', function (ev) {
+    filterKind = ev.target.value;
+    render();
+  });
   document.getElementById('filterReset').addEventListener('click', function () {
-    customRange = null; filterEmployer = ''; filterShow = '';
+    customRange = null; filterEmployer = ''; filterShow = ''; filterKind = '';
     document.getElementById('filterFrom').value = '';
     document.getElementById('filterTo').value = '';
+    document.getElementById('filterKind').value = '';
     render();
   });
 
-  var activeView = 'list';
   var calendarMonth = new Date(); calendarMonth.setDate(1); calendarMonth.setHours(0, 0, 0, 0);
 
   document.querySelectorAll('.tab-btn').forEach(function (btn) {
@@ -903,13 +1142,45 @@
         var details = document.getElementById('calDetails');
         if (entries.length === 0) { details.innerHTML = '<p class="hint">Rien ce jour-là.</p>'; return; }
         details.innerHTML = '<p class="list-title">' + fmtDate(dayDate) + '</p>' + entries.map(function (e) {
-          var val = e.type === 'engagement' ? ((typeof e.hours === 'number' ? e.hours : '?') + ' h · ' + (typeof e.brut === 'number' ? fmtEUR(e.brut) : '?') + (' · ' + STATE_LABEL[entryState(e)])) : fmtEUR(e.amount);
+          var val = e.type === 'engagement' ? ((typeof e.hours === 'number' ? e.hours : '?') + ' h · ' + (typeof e.brut === 'number' ? fmtEUR(e.brut) : (estBrut(e) !== null ? '≈ ' + fmtEUR(estBrut(e)) + ' estimé' : '?')) + (' · ' + STATE_LABEL[entryState(e)])) : fmtEUR(e.amount);
           var extra = (e.type === 'engagement' && (e.show || e.venue)) ? (' (' + [e.show, e.venue].filter(Boolean).map(escapeHtml).join(' · ') + ')') : '';
           return '<div class="entry">' + escapeHtml(e.name) + extra + ' — ' + val + '</div>';
         }).join('');
       });
     });
     document.getElementById('calDetails').innerHTML = '';
+  }
+
+  var statsMetric = 'brut';
+  var statsScope = 'year';   // 'year' = 12 derniers mois, 'all' = depuis le début (ignoré si un filtre de dates est actif)
+  var METRIC_LABEL = { brut: 'Brut (salaires)', net: 'Net', heures: 'Heures' };
+  // net d'un engagement : net payé s'il est connu, sinon le brut en attendant (même règle que le cumul de la barre latérale)
+  function netOf(e) { return typeof e.paye === 'number' ? e.paye : (e.brut || 0); }
+  // Construit une colonne de barre empilée (un segment par employeur, + FT/CS en brut, + hachures = impôts)
+  function buildStackedBar(bucket, isYear, maxTotal, labelText, dataYear, yearsCount) {
+    var byKey = statsMetric === 'heures' ? 'byHours' : (statsMetric === 'net' ? 'byNet' : 'byBrut');
+    var segs = Object.keys(bucket[byKey]).sort(function (a, b) { return bucket[byKey][b] - bucket[byKey][a]; })
+      .map(function (name) { return { color: employerColor(name), value: bucket[byKey][name] }; });
+    var isMoney = statsMetric !== 'heures';
+    if (isMoney && bucket.ft) segs.push({ color: 'var(--ft-color)', value: bucket.ft });
+    if (isMoney && bucket.cs) segs.push({ color: 'var(--cs-color)', value: bucket.cs });
+    var total = segs.reduce(function (s0, x) { return s0 + x.value; }, 0);
+    var h = Math.round((total / maxTotal) * 100);
+    var segHtml = segs.map(function (seg) {
+      var segH = total ? (seg.value / total) * 100 : 0;
+      return '<div style="height:' + segH + '%;background:' + seg.color + ';width:100%;flex:0 0 auto"></div>';
+    }).join('');
+    var value = total ? (statsMetric === 'heures' ? (r1(total)) : (isYear && yearsCount > 8 ? fmtShort(total) : fmtEUR(total))) : '';
+    return '<div class="bar-col"' + (dataYear ? ' data-year="' + dataYear + '" style="cursor:pointer"' : '') + '>' +
+      '<div class="bar-track"><div class="bar-value">' + value + '</div>' +
+      '<div class="bar" style="height:' + h + '%;background:none;display:flex;flex-direction:column-reverse;overflow:hidden">' + segHtml + '</div></div>' +
+      '<div class="bar-label">' + labelText + '</div></div>';
+  }
+
+  // total d'une colonne d'histogramme (mois ou année) selon l'indicateur choisi
+  function bucketTotal(b) {
+    if (statsMetric === 'heures') return Object.values(b.byHours).reduce(function (a, c) { return a + c; }, 0);
+    return (statsMetric === 'net' ? b.net : b.brut) + b.ft + b.cs;
   }
 
   function renderStats() {
@@ -921,8 +1192,20 @@
       if (customRange.end && d > customRange.end) return false;
       return true;
     });
+    var today0 = new Date(); today0.setHours(0, 0, 0, 0);
+    var scopeAll = !customRange && statsScope === 'all';
+    var winStart = new Date(today0.getFullYear(), today0.getMonth() - 11, 1);
+    var winEnd = new Date(today0.getFullYear(), today0.getMonth() + 1, 0);
+    // périmètre de toute la 2e partie : filtre de dates si actif, sinon 12 derniers mois ou depuis le début
+    var scoped = filtered.filter(function (e) {
+      if (customRange || scopeAll) return true;
+      var d = parseISO(e.date);
+      return d >= winStart && d <= winEnd;
+    });
+    var scopeLabel = customRange ? 'période filtrée' : (scopeAll ? 'depuis le début' : '12 derniers mois');
     var months = [];
-    if (customRange) {
+    // pas d'histogramme mensuel sur tout l'historique : l'évolution par année est affichée plus haut
+    if (!scopeAll && customRange) {
       var firstDate = customRange.start;
       if (!firstDate) {
         var engDates = filtered.filter(function (e) { return e.type === 'engagement'; }).map(function (e) { return e.date; }).sort();
@@ -933,122 +1216,180 @@
       var endM = new Date(lastDate.getFullYear(), lastDate.getMonth(), 1);
       var guard = 0;
       while (cursorM <= endM && guard < 36) {
-        months.push({ y: cursorM.getFullYear(), m: cursorM.getMonth(), hours: 0 });
+        months.push(newBucket(cursorM.getFullYear(), cursorM.getMonth()));
         cursorM.setMonth(cursorM.getMonth() + 1);
         guard++;
       }
-      if (months.length === 0) months.push({ y: lastDate.getFullYear(), m: lastDate.getMonth(), hours: 0 });
-    } else {
+      if (months.length === 0) months.push(newBucket(lastDate.getFullYear(), lastDate.getMonth()));
+    } else if (!scopeAll) {
       var cursor = new Date(); cursor.setDate(1); cursor.setHours(0, 0, 0, 0);
       for (var i = 11; i >= 0; i--) {
         var d0 = new Date(cursor.getFullYear(), cursor.getMonth() - i, 1);
-        months.push({ y: d0.getFullYear(), m: d0.getMonth(), hours: 0 });
+        months.push(newBucket(d0.getFullYear(), d0.getMonth()));
       }
     }
     var employersSet = new Set();
     var totalBrutEng = 0, engCount = 0, totalDaysEng = 0;
-    var monthsSet = new Set(), netPayeTotal = 0, indemTotal = 0, congesTotal = 0;
-    filtered.forEach(function (e) {
+    var monthsSet = new Set(), netPayeTotal = 0, indemTotal = 0, congesTotal = 0, hoursByMonth = {};
+    function getMonth(ed) {
+      for (var j = 0; j < months.length; j++) {
+        if (months[j].y === ed.getFullYear() && months[j].m === ed.getMonth()) return months[j];
+      }
+      return null;
+    }
+    scoped.forEach(function (e) {
       var fd = parseISO(e.date);
-      monthsSet.add(fd.getFullYear() + '-' + fd.getMonth());
-      if (e.type === 'indemnisation') { indemTotal += e.amount; return; }
-      if (e.type === 'conges') { congesTotal += e.amount; return; }
+      var mKey = fd.getFullYear() + '-' + fd.getMonth();
+      monthsSet.add(mKey);
+      var mo = getMonth(fd);
+      if (e.type === 'indemnisation') { indemTotal += e.amount; if (mo) mo.ft += e.amount; return; }
+      if (e.type === 'conges') { congesTotal += e.amount; if (mo) mo.cs += e.amount; return; }
       employersSet.add(e.name);
       totalBrutEng += (e.brut || 0); engCount++;
       totalDaysEng += daysSpan(e);
       if (typeof e.paye === 'number') netPayeTotal += e.paye;
-      var ed = parseISO(e.date);
-      for (var j = 0; j < months.length; j++) {
-        if (months[j].y === ed.getFullYear() && months[j].m === ed.getMonth()) { months[j].hours += (e.hours || 0); break; }
+      hoursByMonth[mKey] = (hoursByMonth[mKey] || 0) + (e.hours || 0);
+      if (mo) {
+        mo.hours += (e.hours || 0); mo.brut += (e.brut || 0);
+        mo.byHours[e.name] = (mo.byHours[e.name] || 0) + (e.hours || 0);
+        mo.byBrut[e.name] = (mo.byBrut[e.name] || 0) + (e.brut || 0);
+        mo.net += netOf(e);
+        mo.byNet[e.name] = (mo.byNet[e.name] || 0) + netOf(e);
       }
     });
     var monthsCount = monthsSet.size || 1;
     var avgMonthly = (netPayeTotal + indemTotal + congesTotal) / monthsCount;
     var maxHours = 1;
-    months.forEach(function (mo) { if (mo.hours > maxHours) maxHours = mo.hours; });
+    months.forEach(function (mo) { if (bucketTotal(mo) > maxHours) maxHours = bucketTotal(mo); });
     var maxMonth = null;
-    months.forEach(function (mo) { if (mo.hours > 0 && (!maxMonth || mo.hours > maxMonth.hours)) maxMonth = mo; });
+    Object.keys(hoursByMonth).forEach(function (k) {
+      if (hoursByMonth[k] > 0 && (!maxMonth || hoursByMonth[k] > maxMonth.hours)) {
+        var parts = k.split('-'); maxMonth = { y: parseInt(parts[0], 10), m: parseInt(parts[1], 10), hours: hoursByMonth[k] };
+      }
+    });
     var barsHtml = months.map(function (mo) {
-      var h = Math.round((mo.hours / maxHours) * 100);
       var label = new Date(mo.y, mo.m, 1).toLocaleDateString('fr-FR', { month: 'short' });
-      return '<div class="bar-col"><div class="bar-track"><div class="bar-value">' + (mo.hours ? Math.round(mo.hours * 10) / 10 : '') + '</div><div class="bar" style="height:' + h + '%"></div></div><div class="bar-label">' + label + '</div></div>';
+      return buildStackedBar(mo, false, maxHours, label, null, 0);
     }).join('');
     var maxMonthLabel = maxMonth ? new Date(maxMonth.y, maxMonth.m, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : '—';
 
     var perEmployer = {};
-    filtered.forEach(function (e) {
+    scoped.forEach(function (e) {
       if (e.type !== 'engagement') return;
       if (!perEmployer[e.name]) perEmployer[e.name] = { hours: 0, brut: 0, days: 0 };
       perEmployer[e.name].hours += (e.hours || 0);
       perEmployer[e.name].brut += (e.brut || 0);
       perEmployer[e.name].days += daysSpan(e);
     });
-    var empRows = Object.keys(perEmployer).sort(function (a, b) { return perEmployer[b].brut - perEmployer[a].brut; }).map(function (name) {
+    var empTot = { hours: 0, brut: 0, days: 0 };
+    var empRows = Object.keys(perEmployer).sort(function (a, b) { return perEmployer[b].brut - perEmployer[a].brut; }).map(function (name, i, arr) {
       var s = perEmployer[name];
+      empTot.hours += s.hours; empTot.brut += s.brut; empTot.days += s.days;
       var taux = s.hours ? fmtEUR(s.brut / s.hours) + '<small>/h</small>' : '—';
       var parJour = s.days ? fmtEUR(s.brut / s.days) + '<small>/jour</small>' : '—';
-      return '<div class="emp-row">' +
-        '<span class="emp-name"><span class="cal-dot" style="display:inline-block;background:' + employerColor(name) + '"></span>' + name + '</span>' +
-        '<span class="num">' + (Math.round(s.hours * 10) / 10) + '<small>heures</small></span>' +
+      return '<div class="emp-row' + (i === arr.length - 1 ? ' pre-total' : '') + '">' +
+        '<span class="emp-name"><span class="cal-dot" style="display:inline-block;flex:0 0 auto;background:' + employerColor(name) + '"></span><span class="emp-label" title="' + escapeHtml(name) + '">' + escapeHtml(name) + '</span></span>' +
+        '<span class="num">' + (r1(s.hours)) + '<small>heures</small></span>' +
+        '<span class="num">' + fmtETP(s.hours) + '<small title="équivalent temps plein : heures ÷ ' + FTE_HOURS.toLocaleString('fr-FR') + ' h">ETP</small></span>' +
         '<span class="num">' + fmtEUR(s.brut) + '<small>brut</small></span>' +
         '<span class="num">' + taux + '</span>' +
         '<span class="num">' + parJour + '</span>' +
         '</div>';
     }).join('');
+    if (empRows) {
+      empRows += '<div class="emp-row total">' +
+        '<span class="emp-name">Total</span>' +
+        '<span class="num">' + (r1(empTot.hours)) + '<small>heures</small></span>' +
+        '<span class="num">' + fmtETP(empTot.hours) + '<small title="équivalent temps plein : heures ÷ ' + FTE_HOURS.toLocaleString('fr-FR') + ' h">ETP</small></span>' +
+        '<span class="num">' + fmtEUR(empTot.brut) + '<small>brut</small></span>' +
+        '<span class="num">' + (empTot.hours ? fmtEUR(empTot.brut / empTot.hours) + '<small>/h</small>' : '—') + '</span>' +
+        '<span class="num">' + (empTot.days ? fmtEUR(empTot.brut / empTot.days) + '<small>/jour</small>' : '—') + '</span>' +
+        '</div>';
+    }
 
     var perYearStats = {};
     data.forEach(function (e) {
       if (!matchesEntityFilter(e)) return;
       var y = parseISO(e.date).getFullYear();
-      if (!perYearStats[y]) perYearStats[y] = { hours: 0, brut: 0, indem: 0, conges: 0, paye: 0, impots: 0, employers: new Set() };
+      if (!perYearStats[y]) perYearStats[y] = { hours: 0, brut: 0, net: 0, indem: 0, conges: 0, paye: 0, impots: 0, hasImpots: 0, ft: 0, cs: 0, byHours: {}, byBrut: {}, byNet: {}, employers: new Set() };
+      var ys = perYearStats[y];
       if (e.type === 'engagement') {
-        perYearStats[y].hours += (e.hours || 0); perYearStats[y].brut += (e.brut || 0); perYearStats[y].employers.add(e.name);
-        if (typeof e.paye === 'number') perYearStats[y].paye += e.paye;
-        if (typeof e.avant === 'number' && typeof e.paye === 'number') perYearStats[y].impots += (e.avant - e.paye);
-        else if (typeof e.social === 'number' && typeof e.paye === 'number') perYearStats[y].impots += (e.social - e.paye);
+        ys.hours += (e.hours || 0); ys.brut += (e.brut || 0); ys.employers.add(e.name);
+        ys.byHours[e.name] = (ys.byHours[e.name] || 0) + (e.hours || 0);
+        ys.byBrut[e.name] = (ys.byBrut[e.name] || 0) + (e.brut || 0);
+        ys.net += netOf(e);
+        ys.byNet[e.name] = (ys.byNet[e.name] || 0) + netOf(e);
+        if (typeof e.paye === 'number') ys.paye += e.paye;
       }
-      else if (e.type === 'indemnisation') perYearStats[y].indem += e.amount;
-      else if (e.type === 'conges') perYearStats[y].conges += e.amount;
+      else if (e.type === 'indemnisation') { ys.indem += e.amount; ys.ft += e.amount; }
+      else if (e.type === 'conges') { ys.conges += e.amount; ys.cs += e.amount; }
+      var tx = entryTax(e);
+      if (tx !== null) { ys.impots += tx; ys.hasImpots++; }
     });
     var yearsAsc = Object.keys(perYearStats).sort();
+    var yearsAscLen = yearsAsc.length;
     var maxYearTotal = 1;
-    yearsAsc.forEach(function (y) {
-      var s = perYearStats[y];
-      var tot = s.brut + s.indem + s.conges;
-      if (tot > maxYearTotal) maxYearTotal = tot;
-    });
+    yearsAsc.forEach(function (y) { if (bucketTotal(perYearStats[y]) > maxYearTotal) maxYearTotal = bucketTotal(perYearStats[y]); });
     var yearBarsHtml = yearsAsc.map(function (y) {
-      var s = perYearStats[y];
-      var tot = s.brut + s.indem + s.conges;
-      var h = Math.round((tot / maxYearTotal) * 100);
-      return '<div class="bar-col" data-year="' + y + '" style="cursor:pointer"><div class="bar-track"><div class="bar-value">' + (yearsAsc.length > 8 ? fmtShort(tot) : fmtEUR(tot)) + '</div><div class="bar" style="height:' + h + '%"></div></div><div class="bar-label">' + y + '</div></div>';
+      return buildStackedBar(perYearStats[y], true, maxYearTotal, y, y, yearsAscLen);
     }).join('');
-    var yearRows = yearsAsc.slice().reverse().map(function (y) {
+    var yTot = { hours: 0, brut: 0, paye: 0, impots: 0, hasImpots: 0, indem: 0, conges: 0 };
+    var yearRows = yearsAsc.slice().reverse().map(function (y, i, arr) {
       var s = perYearStats[y];
-      return '<div class="emp-row" data-year="' + y + '" style="cursor:pointer">' +
+      yTot.hours += s.hours; yTot.brut += s.brut; yTot.paye += s.paye; yTot.impots += s.impots; yTot.hasImpots += s.hasImpots; yTot.indem += s.indem; yTot.conges += s.conges;
+      return '<div class="emp-row' + (i === arr.length - 1 ? ' pre-total' : '') + '" data-year="' + y + '" style="cursor:pointer">' +
         '<span class="emp-name">' + y + '</span>' +
-        '<span class="num">' + (Math.round(s.hours * 10) / 10) + '<small>heures</small></span>' +
+        '<span class="num">' + (r1(s.hours)) + '<small>heures</small></span>' +
         '<span class="num">' + fmtEUR(s.brut) + '<small>brut</small></span>' +
         '<span class="num">' + (s.paye ? fmtEUR(s.paye) : '—') + '<small>net payé</small></span>' +
-        '<span class="num">' + (s.impots ? fmtEUR(s.impots) : '—') + '<small>impôts</small></span>' +
-        '<span class="num">' + fmtEUR(s.indem) + '<small>indemnisations</small></span>' +
+        '<span class="num">' + (s.hasImpots ? fmtEUR(s.impots) : (parseInt(y, 10) < 2019 ? '/' : '—')) + '<small>impôts</small></span>' +
+        '<span class="num">' + fmtEUR(s.indem) + '<small title="indemnisations France Travail">indemn.</small></span>' +
         '<span class="num">' + fmtEUR(s.conges) + '<small>congés</small></span>' +
         '</div>';
     }).join('');
+    if (yearRows) {
+      yearRows += '<div class="emp-row total">' +
+        '<span class="emp-name">Total</span>' +
+        '<span class="num">' + (r1(yTot.hours)) + '<small>heures</small></span>' +
+        '<span class="num">' + fmtEUR(yTot.brut) + '<small>brut</small></span>' +
+        '<span class="num">' + (yTot.paye ? fmtEUR(yTot.paye) : '—') + '<small>net payé</small></span>' +
+        '<span class="num">' + (yTot.hasImpots ? fmtEUR(yTot.impots) : '—') + '<small>impôts</small></span>' +
+        '<span class="num">' + fmtEUR(yTot.indem) + '<small title="indemnisations France Travail">indemn.</small></span>' +
+        '<span class="num">' + fmtEUR(yTot.conges) + '<small>congés</small></span>' +
+        '</div>';
+    }
 
     document.getElementById('statsView').innerHTML =
-      '<p class="list-title">Évolution par année <span class="hint" style="display:inline">(cliquez une année pour filtrer)</span></p>' +
+      '<div class="field" style="max-width:220px;margin-bottom:14px"><label for="statsMetricSel">Indicateur des histogrammes</label>' +
+      '<select id="statsMetricSel"><option value="brut"' + (statsMetric === 'brut' ? ' selected' : '') + '>Brut (salaires)</option>' +
+      '<option value="net"' + (statsMetric === 'net' ? ' selected' : '') + '>Net</option>' +
+      '<option value="heures"' + (statsMetric === 'heures' ? ' selected' : '') + '>Heures</option></select></div>' +
+      '<p class="list-title">Évolution par année — ' + METRIC_LABEL[statsMetric] + ' · depuis le début <span class="hint" style="display:inline">(cliquez une année pour filtrer)</span></p>' +
       '<div class="bar-chart">' + yearBarsHtml + '</div>' +
-      '<div class="emp-table" style="margin-bottom:18px">' + yearRows + '</div>' +
-      '<p class="list-title">' + (customRange ? 'Heures par mois — période filtrée' : 'Heures par mois — 12 derniers mois') + '</p>' +
-      '<div class="bar-chart">' + barsHtml + '</div>' +
+      '<p class="hint" style="margin:-10px 0 14px">Chaque couleur = un employeur' + (statsMetric !== 'heures' ? ' (gris clair = France Travail, gris foncé = congés spectacle)' : '') + (statsMetric === 'net' ? ' ; net payé, ou à défaut le brut' : '') + '.</p>' +
+      '<div class="emp-table t6" style="margin-bottom:6px">' + yearRows + '</div>' +
+      '<div class="field" style="max-width:260px;margin:22px 0 14px"><label for="statsScopeSel">Période des indicateurs ci-dessous</label>' +
+      '<select id="statsScopeSel"' + (customRange ? ' disabled' : '') + '>' +
+      (customRange ? '<option>Période filtrée</option>' :
+        '<option value="year"' + (statsScope === 'year' ? ' selected' : '') + '>12 derniers mois</option><option value="all"' + (statsScope === 'all' ? ' selected' : '') + '>Depuis le début</option>') +
+      '</select></div>' +
+      (scopeAll
+        ? '<p class="hint" style="margin:0 0 14px">Pas d’histogramme mensuel sur tout l’historique : l’évolution par année est affichée plus haut.</p>'
+        : '<p class="list-title">' + METRIC_LABEL[statsMetric] + ' par mois — ' + scopeLabel + '</p><div class="bar-chart">' + barsHtml + '</div>') +
       '<div class="mini-row"><span>Employeurs distincts</span><strong>' + employersSet.size + '</strong></div>' +
       '<div class="mini-row"><span>Cachet brut moyen /jour</span><strong>' + (totalDaysEng ? fmtEUR(totalBrutEng / totalDaysEng) : '—') + '</strong></div>' +
       '<div class="mini-row"><span>Revenu net moyen /mois</span><strong>' + fmtEUR(avgMonthly) + '</strong></div>' +
       '<div class="mini-row"><span>Mois le plus chargé</span><strong>' + maxMonthLabel + '</strong></div>' +
       '<div class="mini-row"><span>Engagements enregistrés</span><strong>' + engCount + '</strong></div>' +
-      (empRows ? ('<p class="list-title" style="margin-top:18px">Par employeur</p><div class="emp-table">' + empRows + '</div>') : '');
+      (empRows ? ('<p class="list-title" style="margin-top:18px">Par employeur — ' + scopeLabel + '</p><div class="emp-table t5">' + empRows + '</div>') : '');
 
+    document.getElementById('statsMetricSel').addEventListener('change', function (ev) {
+      statsMetric = ev.target.value;
+      renderStats();
+    });
+    document.getElementById('statsScopeSel').addEventListener('change', function (ev) {
+      if (ev.target.value) { statsScope = ev.target.value; renderStats(); }
+    });
     document.getElementById('statsView').querySelectorAll('[data-year]').forEach(function (el) {
       el.addEventListener('click', function () {
         var y = el.getAttribute('data-year');
@@ -1061,6 +1402,437 @@
     });
   }
 
+  // ===== Import d'un tableur (CSV / TSV / Excel .xlsx) avec correspondance des colonnes =====
+  var SHEET_FIELDS = [
+    { key: 'type', label: 'Type (engagement, France Travail, congés…)' },
+    { key: 'name', label: 'Employeur / production (ou organisme)' },
+    { key: 'date', label: 'Date de début' },
+    { key: 'end', label: 'Date de fin (engagements)' },
+    { key: 'show', label: 'Spectacle' },
+    { key: 'venue', label: 'Lieu' },
+    { key: 'hours', label: 'Heures' },
+    { key: 'brut', label: 'Brut (€)' },
+    { key: 'social', label: 'Net social (€)' },
+    { key: 'imposable', label: 'Net imposable (€)' },
+    { key: 'avant', label: 'Montant avant impôt (€)' },
+    { key: 'paye', label: 'Net payé (€)' },
+    { key: 'amount', label: 'Montant (France Travail / congés)' },
+    { key: 'paid', label: 'Payé ? (oui / non)' }
+  ];
+  // Ordre important : les motifs les plus précis d'abord, une colonne n'est attribuée qu'une fois
+  var SHEET_GUESS = [
+    ['social', /net ?social/], ['imposable', /imposable/], ['avant', /avant/],
+    ['paye', /net ?(paye|verse|a payer)|^verse/], ['brut', /brut|salaire|cachet/],
+    ['hours', /heure|^h$|nb ?h\b|duree/], ['end', /^fin|date ?(de )?fin|^au$|jusqu/],
+    ['date', /date|debut|^du$|^jour/], ['type', /^type|nature|categorie/],
+    ['show', /spectacle|piece|projet|oeuvre|titre/], ['venue', /lieu|salle|theatre|ville/],
+    ['amount', /montant|allocation|indemn/], ['paid', /statut|regle|paiement|^paye/],
+    ['name', /employeur|production|structure|compagnie|^cie|organisme|societe|^nom/]
+  ];
+  var sheetState = null;
+
+  function sheetNorm(s) {
+    return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+  function sheetText(v) { return v == null ? '' : String(v).trim(); }
+  function sheetColLetter(i) { var s = ''; i++; while (i > 0) { var r = (i - 1) % 26; s = String.fromCharCode(65 + r) + s; i = Math.floor((i - 1) / 26); } return s; }
+
+  // --- lecture CSV ---
+  function sheetParseCSV(text) {
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    var firstLine = text.split(/\r?\n/)[0] || '';
+    var delim = ';', best = -1;
+    [';', '\t', ',', '|'].forEach(function (d) { var c = firstLine.split(d).length; if (c > best) { best = c; delim = d; } });
+    var rows = [], row = [], cell = '', q = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (q) {
+        if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+        else cell += ch;
+      } else if (ch === '"') q = true;
+      else if (ch === delim) { row.push(cell); cell = ''; }
+      else if (ch === '\n' || ch === '\r') {
+        if (ch === '\r' && text[i + 1] === '\n') i++;
+        row.push(cell); cell = ''; rows.push(row); row = [];
+      } else cell += ch;
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+  function sheetDecodeText(buf) {
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); }
+    catch (e) { return new TextDecoder('windows-1252').decode(buf); }
+  }
+
+  // --- lecture Excel (.xlsx = zip de XML), sans bibliothèque ---
+  async function sheetInflate(bytes) {
+    var stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  async function sheetUnzip(buf) {
+    var u8 = new Uint8Array(buf), dv = new DataView(buf), dec = new TextDecoder(), files = {}, eocd = -1;
+    for (var i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) {
+      if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('fichier Excel illisible');
+    var count = dv.getUint16(eocd + 10, true), p = dv.getUint32(eocd + 16, true), list = [];
+    for (var n = 0; n < count; n++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) break;
+      var nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
+      list.push({ name: dec.decode(u8.subarray(p + 46, p + 46 + nlen)), method: dv.getUint16(p + 10, true), csize: dv.getUint32(p + 20, true), off: dv.getUint32(p + 42, true) });
+      p += 46 + nlen + elen + clen;
+    }
+    for (var k = 0; k < list.length; k++) {
+      var e = list[k];
+      if (!/^(content\.xml|xl\/(workbook\.xml|_rels\/workbook\.xml\.rels|sharedStrings\.xml|styles\.xml|worksheets\/[^\/]+\.xml))$/.test(e.name)) continue;
+      var start = e.off + 30 + dv.getUint16(e.off + 26, true) + dv.getUint16(e.off + 28, true);
+      var raw = u8.subarray(start, start + e.csize);
+      files[e.name] = dec.decode(e.method === 0 ? raw : await sheetInflate(raw));
+    }
+    return files;
+  }
+  function sheetXml(text) { return new DOMParser().parseFromString(text, 'application/xml'); }
+  function sheetIsDateFmt(id, custom) {
+    if ((id >= 14 && id <= 17) || id === 22 || (id >= 27 && id <= 36) || (id >= 50 && id <= 58)) return true;
+    var code = custom[id];
+    if (!code) return false;
+    code = code.replace(/"[^"]*"/g, '').replace(/\[[^\]]*\]/g, '').replace(/\\./g, '');
+    return /[dy]/i.test(code);
+  }
+  // LibreOffice / OpenOffice (.ods) : content.xml contient toutes les feuilles
+  function sheetReadOds(xml) {
+    var doc = sheetXml(xml), sheets = [];
+    Array.prototype.forEach.call(doc.getElementsByTagName('table:table'), function (tb, idx) {
+      var rows = [];
+      Array.prototype.forEach.call(tb.getElementsByTagName('table:table-row'), function (tr) {
+        var row = [], hasValue = false;
+        Array.prototype.forEach.call(tr.children, function (c) {
+          if (c.tagName !== 'table:table-cell' && c.tagName !== 'table:covered-table-cell') return;
+          var type = c.getAttribute('office:value-type'), val = '';
+          if (type === 'float' || type === 'percentage' || type === 'currency') val = parseFloat(c.getAttribute('office:value'));
+          else if (type === 'date') val = (c.getAttribute('office:date-value') || '').slice(0, 10);
+          else if (type === 'time') {
+            var tm = /PT(?:(\d+)H)?(?:(\d+)M)?/.exec(c.getAttribute('office:time-value') || '');
+            val = tm ? Math.round(((parseInt(tm[1] || '0', 10)) + (parseInt(tm[2] || '0', 10)) / 60) * 100) / 100 : '';
+          }
+          else if (type === 'boolean') val = c.getAttribute('office:boolean-value') === 'true' ? 'oui' : 'non';
+          else {
+            var ps = [];
+            Array.prototype.forEach.call(c.children, function (p) { if (p.tagName === 'text:p') ps.push(p.textContent); });
+            val = ps.join(' ');
+          }
+          if (val !== '') hasValue = true;
+          var rep = Math.min(parseInt(c.getAttribute('table:number-columns-repeated') || '1', 10), val === '' ? 1 : 50);
+          for (var k = 0; k < rep; k++) row.push(val);
+        });
+        var rrep = Math.min(parseInt(tr.getAttribute('table:number-rows-repeated') || '1', 10), hasValue ? 200 : 1);
+        for (var q = 0; q < rrep; q++) rows.push(row.slice());
+      });
+      sheets.push({ name: tb.getAttribute('table:name') || ('Feuille ' + (idx + 1)), rows: rows });
+    });
+    if (!sheets.length) throw new Error('aucune feuille trouvée dans ce fichier');
+    return sheets;
+  }
+  async function sheetReadZip(buf) {
+    if (typeof DecompressionStream === 'undefined') throw new Error('ce navigateur ne sait pas lire ce format : exportez plutôt en CSV');
+    var f = await sheetUnzip(buf);
+    if (f['content.xml']) return sheetReadOds(f['content.xml']);
+    return sheetReadXlsx(f);
+  }
+  function sheetReadXlsx(f) {
+    if (!f['xl/workbook.xml']) throw new Error('fichier illisible : enregistrez-le en .xlsx, .ods ou CSV');
+    var shared = [];
+    if (f['xl/sharedStrings.xml']) {
+      Array.prototype.forEach.call(sheetXml(f['xl/sharedStrings.xml']).getElementsByTagName('si'), function (si) {
+        var t = '';
+        Array.prototype.forEach.call(si.children, function (c) {
+          if (c.tagName === 't') t += c.textContent;
+          else if (c.tagName === 'r') Array.prototype.forEach.call(c.getElementsByTagName('t'), function (x) { t += x.textContent; });
+        });
+        shared.push(t);
+      });
+    }
+    var custom = {}, xfDate = [];
+    if (f['xl/styles.xml']) {
+      var st = sheetXml(f['xl/styles.xml']);
+      Array.prototype.forEach.call(st.getElementsByTagName('numFmt'), function (n) { custom[parseInt(n.getAttribute('numFmtId'), 10)] = n.getAttribute('formatCode'); });
+      var xfs = st.getElementsByTagName('cellXfs')[0];
+      if (xfs) Array.prototype.forEach.call(xfs.getElementsByTagName('xf'), function (x) { xfDate.push(sheetIsDateFmt(parseInt(x.getAttribute('numFmtId') || '0', 10), custom)); });
+    }
+    var rels = {};
+    if (f['xl/_rels/workbook.xml.rels']) {
+      Array.prototype.forEach.call(sheetXml(f['xl/_rels/workbook.xml.rels']).getElementsByTagName('Relationship'), function (r) { rels[r.getAttribute('Id')] = r.getAttribute('Target'); });
+    }
+    var sheets = [];
+    Array.prototype.forEach.call(sheetXml(f['xl/workbook.xml']).getElementsByTagName('sheet'), function (sh, idx) {
+      var target = rels[sh.getAttribute('r:id')];
+      var path = target ? target.replace(/^\/?(xl\/)?/, 'xl/') : 'xl/worksheets/sheet' + (idx + 1) + '.xml';
+      if (!f[path]) return;
+      var rows = [];
+      Array.prototype.forEach.call(sheetXml(f[path]).getElementsByTagName('row'), function (r) {
+        var row = [];
+        Array.prototype.forEach.call(r.getElementsByTagName('c'), function (c) {
+          var ref = c.getAttribute('r') || '', m = /^([A-Z]+)/.exec(ref), col = row.length;
+          if (m) { col = 0; for (var j = 0; j < m[1].length; j++) col = col * 26 + (m[1].charCodeAt(j) - 64); col--; }
+          var t = c.getAttribute('t'), vEl = c.getElementsByTagName('v')[0], v = vEl ? vEl.textContent : '', val = '';
+          if (t === 's') val = shared[parseInt(v, 10)] || '';
+          else if (t === 'inlineStr') val = c.textContent;
+          else if (t === 'str') val = v;
+          else if (t === 'b') val = v === '1' ? 'oui' : 'non';
+          else if (t === 'e') val = '';
+          else if (v !== '') {
+            var num = parseFloat(v), si = parseInt(c.getAttribute('s') || '0', 10);
+            val = xfDate[si] && num >= 1 ? new Date(Date.UTC(1899, 11, 30) + Math.floor(num) * 86400000).toISOString().slice(0, 10) : num;
+          }
+          row[col] = val;
+        });
+        rows.push(row);
+      });
+      sheets.push({ name: sh.getAttribute('name') || ('Feuille ' + (idx + 1)), rows: rows });
+    });
+    if (!sheets.length) throw new Error('aucune feuille trouvée dans ce fichier');
+    return sheets;
+  }
+
+  // --- conversion des valeurs ---
+  var SHEET_MONTHS = { janv: 1, jan: 1, fevr: 2, fev: 2, mars: 3, mar: 3, avr: 4, mai: 5, juin: 6, juil: 7, aout: 8, sept: 9, sep: 9, oct: 10, nov: 11, dec: 12 };
+  function sheetISO(y, m, d) {
+    y = parseInt(y, 10); m = parseInt(m, 10); d = parseInt(d, 10);
+    if (y < 100) y += 2000;
+    var dt = new Date(y, m - 1, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return null;
+    return y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+  }
+  function sheetDate(v) {
+    if (v == null || v === '') return null;
+    if (typeof v === 'number') return v > 20000 && v < 80000 ? new Date(Date.UTC(1899, 11, 30) + Math.floor(v) * 86400000).toISOString().slice(0, 10) : null;
+    var s = String(v).trim(), m;
+    if ((m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s))) return sheetISO(m[1], m[2], m[3]);
+    if ((m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/.exec(s))) return sheetISO(m[3], m[2], m[1]);   // jour en premier
+    var n = sheetNorm(s);
+    if ((m = /^(\d{1,2}) (?:er )?([a-z]+) (\d{2,4})$/.exec(n))) {
+      var key = m[2].slice(0, 4); var mo = SHEET_MONTHS[m[2]] || SHEET_MONTHS[key] || SHEET_MONTHS[m[2].slice(0, 3)];
+      if (mo) return sheetISO(m[3], mo, m[1]);
+    }
+    return null;
+  }
+  function sheetNum(v) {
+    if (typeof v === 'number') return isFinite(v) ? v : null;
+    var s = sheetText(v).replace(/[\s\u00a0\u202f€]/g, '').replace(/[a-zA-Z]+$/, '');
+    if (!s || !/\d/.test(s)) return null;
+    var lc = s.lastIndexOf(','), ld = s.lastIndexOf('.');
+    if (lc > -1 && ld > -1) s = lc > ld ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+    else if (lc > -1) s = s.replace(',', '.');
+    else if ((s.match(/\./g) || []).length > 1) s = s.replace(/\./g, '');
+    var n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  }
+  function sheetHours(v) {
+    if (typeof v === 'string') {
+      var m = /^(\d+)\s*(?:h|:)\s*(\d{1,2})?$/i.exec(v.trim());
+      if (m) return Math.round((parseInt(m[1], 10) + (m[2] ? parseInt(m[2], 10) / 60 : 0)) * 100) / 100;
+    }
+    return sheetNum(v);
+  }
+  function sheetBool(v) {
+    var s = sheetNorm(v);
+    if (!s) return null;
+    if (/^(oui|o|x|1|vrai|true|paye|regle|ok|recu|verse)/.test(s)) return true;
+    if (/^(non|n|0|faux|false|a payer|attente|impaye)/.test(s)) return false;
+    return null;
+  }
+  function sheetType(v) {
+    var s = sheetNorm(v);
+    if (/conge|^cs$/.test(s)) return 'conges';
+    if (/france travail|pole emploi|chomage|^are$|^ft$|allocation|indemn/.test(s)) return 'indemnisation';
+    return 'engagement';
+  }
+
+  // --- état et préparation ---
+  function sheetColCount() {
+    var rows = sheetState.sheets[sheetState.sheetIdx].rows, n = 0;
+    for (var i = 0; i < Math.min(rows.length, 50); i++) n = Math.max(n, (rows[i] || []).length);
+    return n;
+  }
+  function sheetDataRows() {
+    var rows = sheetState.sheets[sheetState.sheetIdx].rows.map(function (r, i) { return { line: i + 1, cells: r || [] }; });
+    rows = rows.filter(function (r) { return r.cells.some(function (c) { return sheetText(c) !== ''; }); });
+    return sheetState.hasHeader ? rows.slice(1) : rows;
+  }
+  function sheetHeaderCells() {
+    if (!sheetState.hasHeader) return [];
+    var rows = sheetState.sheets[sheetState.sheetIdx].rows.filter(function (r) { return (r || []).some(function (c) { return sheetText(c) !== ''; }); });
+    return rows[0] || [];
+  }
+  function sheetAutoMap() {
+    var heads = sheetHeaderCells().map(sheetNorm), used = {}, map = {};
+    SHEET_GUESS.forEach(function (g) {
+      for (var i = 0; i < heads.length; i++) {
+        if (used[i] || !heads[i]) continue;
+        if (g[1].test(heads[i])) { map[g[0]] = i; used[i] = true; return; }
+      }
+    });
+    sheetState.map = map;
+  }
+  function sheetBuild() {
+    var st = sheetState, map = st.map, rows = sheetDataRows(), out = [], skipped = [], dups = 0;
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var seen = {};
+    function key(e) { return [e.type, e.date, String(e.name).toLowerCase(), e.hours == null ? '' : e.hours, e.brut == null ? '' : e.brut, e.amount == null ? '' : e.amount].join('|'); }
+    data.forEach(function (e) { seen[key(e)] = true; });
+    rows.forEach(function (r) {
+      function get(k) { return map[k] == null || map[k] === '' ? undefined : r.cells[map[k]]; }
+      var type = map.type != null && map.type !== '' ? sheetType(get('type')) : st.defType;
+      var date = sheetDate(get('date'));
+      if (!date) { skipped.push({ line: r.line, why: 'date absente ou illisible' }); return; }
+      var name = sheetText(get('name')), e;
+      if (type === 'engagement') {
+        if (!name) { skipped.push({ line: r.line, why: 'employeur manquant' }); return; }
+        e = { type: 'engagement', name: name, date: date };
+        var hrs = sheetHours(get('hours')); if (hrs != null) e.hours = hrs;
+        var brut = sheetNum(get('brut')); if (brut != null) e.brut = brut;
+        var show = sheetText(get('show')); if (show) e.show = show;
+        var venue = sheetText(get('venue')); if (venue) e.venue = venue;
+        ['social', 'imposable', 'avant', 'paye'].forEach(function (k) { var n = sheetNum(get(k)); if (n != null) e[k] = n; });
+        var end = sheetDate(get('end')); if (end && end > date) e.endDate = end;
+        var paid = sheetBool(get('paid'));
+        if (paid == null) paid = st.defPaid;
+        e.estPaye = paid && parseISO(date) <= today;
+      } else {
+        var amount = sheetNum(get('amount'));
+        if (amount == null) amount = sheetNum(get('paye'));
+        if (amount == null) { skipped.push({ line: r.line, why: 'montant manquant' }); return; }
+        e = { type: type, name: name || defaultOrganisme[type], date: date, amount: amount };
+        var av = sheetNum(get('avant')); if (av != null) e.avant = av;
+      }
+      var k = key(e);
+      if (st.skipDups && seen[k]) { dups++; return; }
+      seen[k] = true;
+      e.id = Date.now() + '-' + Math.random().toString(36).slice(2);
+      out.push(e);
+    });
+    return { entries: out, skipped: skipped, dups: dups, total: rows.length };
+  }
+
+  // --- interface ---
+  var sheetDlg = document.getElementById('sheetDlg');
+  var sheetBody = document.getElementById('sheetBody');
+  function sheetColLabel(i, headCells, sampleRow) {
+    var h = sheetText(headCells[i]);
+    var base = sheetColLetter(i) + (h ? ' · ' + h : '');
+    var sample = sampleRow ? sheetText(sampleRow.cells[i]) : '';
+    if (sample) base += '  (ex. ' + (sample.length > 18 ? sample.slice(0, 17) + '…' : sample) + ')';
+    return base;
+  }
+  function sheetRenderPicker(msg) {
+    sheetBody.innerHTML =
+      (msg ? '<p class="sheet-err">' + escapeHtml(msg) + '</p>' : '') +
+      '<p class="hint" style="margin-top:0">Choisissez votre tableur : <strong>Excel (.xlsx)</strong>, <strong>LibreOffice (.ods)</strong> ou <strong>CSV</strong> (exporté depuis Numbers ou Google Sheets). ' +
+      'Vous pourrez indiquer quelle colonne correspond à quoi avant d’importer, rien n’est ajouté sans votre accord.</p>' +
+      '<p class="hint">Un ancien .xls ou un .numbers ? Enregistrez-le d’abord en .xlsx, .ods ou CSV.</p>' +
+      '<button class="primary" id="sheetPick" type="button">Choisir un fichier</button>';
+  }
+  function sheetRender() {
+    var st = sheetState;
+    if (!st) { sheetRenderPicker(); return; }
+    var rows = sheetDataRows(), heads = sheetHeaderCells(), ncol = sheetColCount(), sample = rows[0];
+    var res = sheetBuild();
+    var h = '<p class="sheet-file"><strong>' + escapeHtml(st.fileName) + '</strong> · ' + rows.length + ' ligne' + (rows.length > 1 ? 's' : '') + ' lue' + (rows.length > 1 ? 's' : '') + ' <button class="link-btn" id="sheetPick" type="button">changer de fichier</button></p>';
+    h += '<div class="sheet-opts">';
+    if (st.sheets.length > 1) {
+      h += '<label>Feuille<select id="sheetSel">' + st.sheets.map(function (s, i) { return '<option value="' + i + '"' + (i === st.sheetIdx ? ' selected' : '') + '>' + escapeHtml(s.name) + '</option>'; }).join('') + '</select></label>';
+    }
+    h += '<label class="sheet-check"><input type="checkbox" id="sheetHeader"' + (st.hasHeader ? ' checked' : '') + '> La première ligne contient les titres de colonnes</label></div>';
+    h += '<p class="stat-label" style="margin-top:14px">Correspondance des colonnes</p><div class="sheet-grid">';
+    SHEET_FIELDS.forEach(function (fd) {
+      var cur = st.map[fd.key];
+      h += '<label>' + escapeHtml(fd.label) + (fd.key === 'date' ? ' *' : '') + '<select data-field="' + fd.key + '"><option value="">— ignorer —</option>';
+      for (var i = 0; i < ncol; i++) h += '<option value="' + i + '"' + (cur === i ? ' selected' : '') + '>' + escapeHtml(sheetColLabel(i, heads, sample)) + '</option>';
+      h += '</select></label>';
+    });
+    h += '</div><div class="sheet-opts" style="margin-top:12px">';
+    if (st.map.type == null || st.map.type === '') {
+      h += '<label>Sans colonne « Type », toutes les lignes sont<select id="sheetDefType"><option value="engagement"' + (st.defType === 'engagement' ? ' selected' : '') + '>des engagements</option><option value="indemnisation"' + (st.defType === 'indemnisation' ? ' selected' : '') + '>des versements France Travail</option><option value="conges"' + (st.defType === 'conges' ? ' selected' : '') + '>des versements Congés spectacle</option></select></label>';
+    }
+    if (st.map.paid == null || st.map.paid === '') {
+      h += '<label>Sans colonne « Payé », les engagements passés sont<select id="sheetDefPaid"><option value="1"' + (st.defPaid ? ' selected' : '') + '>payés</option><option value="0"' + (!st.defPaid ? ' selected' : '') + '>non payés</option></select></label>';
+    }
+    h += '<label class="sheet-check"><input type="checkbox" id="sheetDups"' + (st.skipDups ? ' checked' : '') + '> Ignorer ce qui existe déjà (même date, employeur, heures et montants)</label></div>';
+    // aperçu
+    h += '<p class="stat-label" style="margin-top:16px">Aperçu</p>';
+    var parts = [res.entries.length + ' à importer'];
+    if (res.dups) parts.push(res.dups + ' déjà présent' + (res.dups > 1 ? 's' : ''));
+    if (res.skipped.length) parts.push(res.skipped.length + ' ignorée' + (res.skipped.length > 1 ? 's' : ''));
+    h += '<p class="hint" style="margin-top:0">' + parts.join(' · ') + '</p>';
+    if (res.entries.length) {
+      h += '<div class="sheet-table"><table><thead><tr><th>Type</th><th>Date</th><th>Employeur / organisme</th><th>Heures</th><th>Brut / montant</th></tr></thead><tbody>';
+      res.entries.slice(0, 6).forEach(function (e) {
+        h += '<tr><td>' + (e.type === 'engagement' ? 'Engagement' : e.type === 'conges' ? 'Congés' : 'France Travail') + '</td><td>' + escapeHtml(fmtDate(parseISO(e.date))) + '</td><td>' + escapeHtml(e.name) + '</td><td>' + (e.hours != null ? e.hours + ' h' : '') + '</td><td>' + (e.type === 'engagement' ? (e.brut != null ? fmtCents(e.brut) + ' €' : '') : fmtCents(e.amount) + ' €') + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+      if (res.entries.length > 6) h += '<p class="hint" style="margin-top:6px">… et ' + (res.entries.length - 6) + ' autre' + (res.entries.length - 6 > 1 ? 's' : '') + '.</p>';
+    }
+    if (res.skipped.length) {
+      h += '<p class="hint">Lignes ignorées : ' + res.skipped.slice(0, 5).map(function (s) { return 'ligne ' + s.line + ' (' + s.why + ')'; }).join(', ') + (res.skipped.length > 5 ? '…' : '') + '</p>';
+    }
+    h += '<div class="sheet-actions"><button class="primary" id="sheetGo" type="button"' + (res.entries.length ? '' : ' disabled') + '>Importer ' + res.entries.length + ' entrée' + (res.entries.length > 1 ? 's' : '') + '</button><span class="hint" style="margin:0">Elles seront ajoutées à vos données actuelles.</span></div>';
+    sheetBody.innerHTML = h;
+  }
+  function sheetLoadSheet(idx) {
+    sheetState.sheetIdx = idx;
+    sheetAutoMap();
+  }
+  async function sheetHandleFile(file) {
+    try {
+      var buf = await file.arrayBuffer(), u8 = new Uint8Array(buf, 0, 4), sheets;
+      if (u8[0] === 0xD0 && u8[1] === 0xCF) throw new Error('ancien format .xls : enregistrez-le en .xlsx ou en CSV');
+      if (u8[0] === 0x50 && u8[1] === 0x4B) sheets = await sheetReadZip(buf);
+      else sheets = [{ name: 'Feuille 1', rows: sheetParseCSV(sheetDecodeText(buf)) }];
+      sheetState = { fileName: file.name, sheets: sheets, sheetIdx: 0, hasHeader: true, map: {}, defType: 'engagement', defPaid: true, skipDups: true };
+      sheetLoadSheet(0);
+      if (!sheetDataRows().length) { sheetState = null; sheetRenderPicker('Ce fichier ne contient aucune ligne exploitable.'); return; }
+      sheetRender();
+    } catch (e) {
+      sheetState = null;
+      sheetRenderPicker('Lecture impossible : ' + (e && e.message ? e.message : e));
+    }
+  }
+  document.getElementById('sheetBtn').addEventListener('click', function () {
+    sheetState = null; sheetRenderPicker(); sheetDlg.showModal();
+  });
+  document.getElementById('sheetClose').addEventListener('click', function () { sheetDlg.close(); });
+  document.getElementById('sheetFile').addEventListener('change', function (ev) {
+    var f = ev.target.files && ev.target.files[0];
+    ev.target.value = '';
+    if (f) sheetHandleFile(f);
+  });
+  sheetBody.addEventListener('click', function (ev) {
+    var id = ev.target.id;
+    if (id === 'sheetPick') document.getElementById('sheetFile').click();
+    else if (id === 'sheetGo' && sheetState) {
+      var res = sheetBuild();
+      if (!res.entries.length) return;
+      res.entries.forEach(function (e) { data.push(e); });
+      persist(); render();
+      sheetBody.innerHTML = '<p><strong>' + res.entries.length + ' entrée' + (res.entries.length > 1 ? 's importées' : ' importée') + '.</strong></p>' +
+        '<p class="hint">Vous pouvez les retrouver dans la liste et les corriger une par une si besoin.</p><button class="primary" id="sheetDone" type="button">Fermer</button>';
+      sheetState = null;
+    } else if (id === 'sheetDone') sheetDlg.close();
+  });
+  sheetBody.addEventListener('change', function (ev) {
+    var t = ev.target, st = sheetState;
+    if (!st) return;
+    if (t.getAttribute('data-field')) { st.map[t.getAttribute('data-field')] = t.value === '' ? null : parseInt(t.value, 10); }
+    else if (t.id === 'sheetSel') { sheetLoadSheet(parseInt(t.value, 10)); }
+    else if (t.id === 'sheetHeader') { st.hasHeader = t.checked; sheetAutoMap(); }
+    else if (t.id === 'sheetDefType') st.defType = t.value;
+    else if (t.id === 'sheetDefPaid') st.defPaid = t.value === '1';
+    else if (t.id === 'sheetDups') st.skipDups = t.checked;
+    else return;
+    sheetRender();
+  });
+
+
   (async function init() {
     var loaded = await loadInitial();
     data = migrateEntries(loaded.entries);
@@ -1069,6 +1841,12 @@
     render();
   })();
 })();
+</script>
+<script>
+  // Mode appli : installation et fonctionnement hors connexion (uniquement quand la page est servie en https)
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
 </script>
 </body>
 </html>
