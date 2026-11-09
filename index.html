@@ -163,10 +163,14 @@
   .sheet-actions { display: flex; align-items: center; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
   .sheet-err { color: var(--rose); font-size: 13.5px; margin: 0 0 10px; }
   button.primary:disabled { opacity: .45; cursor: default; }
+  .demo-bar { display: none; background: rgba(201,112,100,0.14); border: 1px solid var(--rose); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .demo-on .demo-bar { display: flex; }
+  .demo-on #importBtn, .demo-on #sheetBtn, .demo-on #exportBtn { display: none; }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="demo-bar" id="demoBar"><span><strong>Mode démonstration</strong> : ces données sont fictives et rien n’est enregistré.</span><button class="link-btn" id="demoExit" type="button">Quitter la démo</button></div>
   <div class="top-actions">
     <span id="connBadge" class="toggle-theme" style="cursor:default"></span>
     <button class="toggle-theme" id="exportBtn" type="button">Exporter</button>
@@ -394,6 +398,7 @@
     return true;
   }
   var isRemote = false;
+  var demoMode = location.hash === '#demo';   // démonstration : données fictives, jamais enregistrées
   var dataVersion = null;
 
   function loadLocalFallback() {
@@ -419,6 +424,7 @@
   }
 
   async function persist() {
+    if (demoMode) return;
     if (isRemote) {
       try {
         var res = await fetch('/api/data', {
@@ -447,6 +453,7 @@
   function setConnBadge() {
     var el = document.getElementById('connBadge');
     if (!el) return;
+    if (demoMode) { el.textContent = 'Démonstration'; el.style.color = 'var(--rose)'; el.title = 'Données fictives : rien n’est enregistré.'; return; }
     el.textContent = isRemote ? 'Synchronisé' : 'Local uniquement';
     el.style.color = isRemote ? 'var(--teal)' : 'var(--muted)';
     el.title = isRemote ? 'Vos données sont enregistrées sur le serveur.' : 'Vos données restent dans ce navigateur : pensez à les sauvegarder de temps en temps avec « Exporter ».';
@@ -777,7 +784,7 @@
       : 'Depuis le ' + fmtDate(getAnchorPeriod().start) + ' (date anniversaire) — utilisez le filtre de dates ci-dessus pour remonter plus loin.';
     var list = document.getElementById('list');
     if (sorted.length === 0) {
-      list.innerHTML = '<div class="empty-state">' + (data.length ? 'Rien depuis votre date anniversaire — élargissez le filtre de dates pour voir votre historique complet.' : 'Aucune entrée pour l’instant — ajoutez la première ci-dessus.') + '</div>';
+      list.innerHTML = '<div class="empty-state">' + (data.length ? 'Rien depuis votre date anniversaire — élargissez le filtre de dates pour voir votre historique complet.' : 'Aucune entrée pour l’instant — ajoutez la première ci-dessus.' + (demoMode ? '' : '<br><button class="link-btn" id="demoStart" type="button" style="margin-top:10px;font-size:13px">Essayer avec des données d’exemple</button>')) + '</div>';
       return;
     }
     list.innerHTML = '';
@@ -1832,8 +1839,63 @@
   });
 
 
+  // Données fictives pour la démonstration : dates calculées par rapport à aujourd'hui pour rester d'actualité
+  function demoData() {
+    var today = new Date(); today.setHours(12, 0, 0, 0);
+    function iso(offset) {
+      var d = new Date(today); d.setDate(d.getDate() + offset);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    var entries = [], n = 0;
+    function eng(offset, name, show, venue, hours, rate, paid, days) {
+      var brut = Math.round(hours * rate * 100) / 100, e = { id: 'demo-' + (++n), type: 'engagement', name: name, date: iso(offset), hours: hours, estPaye: paid };
+      if (show) e.show = show;
+      if (venue) e.venue = venue;
+      if (days) e.endDate = iso(offset + days);
+      if (paid || offset > -45) e.brut = brut;
+      if (paid) {
+        e.social = Math.round(brut * 0.77 * 100) / 100; e.imposable = Math.round(brut * 0.8 * 100) / 100;
+        e.avant = e.social; e.paye = Math.round(brut * 0.73 * 100) / 100;
+      }
+      entries.push(e);
+    }
+    // contrats passés (payés)
+    eng(-270, 'Compagnie Les Heures Bleues', 'Le Jardin des Possibles', 'Théâtre des Marronniers', 36, 17.5, true, 4);
+    eng(-255, 'Studio Lumière', null, null, 24, 19, true);
+    eng(-240, 'Festival d’Été', 'Soirée d’ouverture', 'Place du Marché', 12, 21, true);
+    eng(-225, 'Compagnie Les Heures Bleues', 'Le Jardin des Possibles', 'Salle des Fêtes', 24, 17.5, true, 2);
+    eng(-205, 'Théâtre des Marronniers', 'Cabaret d’automne', null, 48, 16.5, true, 5);
+    eng(-185, 'Studio Lumière', null, null, 36, 19, true, 3);
+    eng(-170, 'Association Les Planches', 'Contes pour tous', 'Médiathèque', 12, 15, true);
+    eng(-150, 'Compagnie Les Heures Bleues', 'Nuit blanche', 'Théâtre des Marronniers', 36, 17.5, true, 3);
+    eng(-130, 'Festival d’Été', 'Clôture', 'Place du Marché', 24, 21, true, 1);
+    eng(-110, 'Théâtre des Marronniers', 'Cabaret d’hiver', null, 60, 16.5, true, 6);
+    eng(-90, 'Studio Lumière', null, null, 24, 19, true);
+    eng(-75, 'Association Les Planches', 'Contes pour tous', 'Médiathèque', 12, 15, true);
+    eng(-60, 'Compagnie Les Heures Bleues', 'Le Jardin des Possibles', 'Salle des Fêtes', 36, 17.5, true, 3);
+    // contrat passé pas encore marqué « payé » (déclenche le rappel) et contrats récents / à venir
+    eng(-28, 'Studio Lumière', null, null, 24, 19, false);
+    eng(-12, 'Théâtre des Marronniers', 'Cabaret de printemps', null, 36, 16.5, false, 3);
+    eng(-4, 'Association Les Planches', 'Contes pour tous', 'Médiathèque', 12, 15, false);
+    eng(12, 'Compagnie Les Heures Bleues', 'Nouvelle création', 'Théâtre des Marronniers', 48, 17.5, false, 4);
+    entries.push({ id: 'demo-ft1', type: 'indemnisation', name: 'France Travail', date: iso(-100), amount: 980, avant: 1050 });
+    entries.push({ id: 'demo-ft2', type: 'indemnisation', name: 'France Travail', date: iso(-40), amount: 640, avant: 700 });
+    entries.push({ id: 'demo-cs1', type: 'conges', name: 'Congés Spectacles', date: iso(-120), amount: 420 });
+    var a = new Date(today); a.setDate(a.getDate() - 280);
+    return { entries: entries, anchor: '2000-' + String(a.getMonth() + 1).padStart(2, '0') + '-' + String(a.getDate()).padStart(2, '0') };
+  }
+
+  document.getElementById('list').addEventListener('click', function (ev) {
+    if (ev.target.id === 'demoStart') { location.hash = 'demo'; location.reload(); }
+  });
+  document.getElementById('demoExit').addEventListener('click', function () {
+    history.replaceState(null, '', location.pathname + location.search);
+    location.reload();
+  });
+
   (async function init() {
-    var loaded = await loadInitial();
+    if (demoMode) document.documentElement.classList.add('demo-on');
+    var loaded = demoMode ? demoData() : await loadInitial();
     data = migrateEntries(loaded.entries);
     anchorStr = loaded.anchor;
     setConnBadge();

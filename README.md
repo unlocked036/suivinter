@@ -19,6 +19,8 @@ Un petit outil local et gratuit , très largement vibecodé, pour suivre ses con
 
 Ouvrez simplement l’application dans votre navigateur : **https://unlocked036.github.io/suivinter/** Elle fonctionne aussi **sans connexion** une fois chargée.
 
+**Essayer sans rien saisir** : ouvrez **https://unlocked036.github.io/suivinter/#demo**. Des données fictives sont chargées pour vous montrer l’outil, et rien n’est enregistré. Vos vraies données, si vous en avez, ne sont pas touchées.
+
 **Installer l’application** (facultatif) :
 
 - Sur ordinateur, dans Chrome, Edge ou Brave : cliquez sur l’icône d’installation dans la barre d’adresse.
