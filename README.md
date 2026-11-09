@@ -17,7 +17,7 @@ Un petit outil local et gratuit , très largement vibecodé, pour suivre ses con
 
 ## Utilisation
 
-Ouvrez simplement le lien de l’application dans votre navigateur. Elle fonctionne aussi **sans connexion** une fois chargée.
+Ouvrez simplement l’application dans votre navigateur : **https://unlocked036.github.io/suivinter/** Elle fonctionne aussi **sans connexion** une fois chargée.
 
 **Installer l’application** (facultatif) :
 
@@ -43,3 +43,8 @@ Le bouton **« Importer un tableur »** lit les fichiers **Excel (.xlsx)**, **Li
 
 Pour un ancien .xls ou un fichier Numbers, enregistrez-le d’abord en .xlsx, .ods ou CSV.
 
+## Un problème, une remarque ?
+
+Ouvrez une « Issue » sur la page GitHub du projet : https://github.com/unlocked036/suivinter/issues (un compte GitHub gratuit est nécessaire).
+
+Ces messages sont publics : merci de **ne pas y écrire vos chiffres personnels** (montants, employeurs…) quand vous décrivez un problème.
